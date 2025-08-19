@@ -59,7 +59,7 @@ public class V16_MigrateLibraryCodeLists implements MigrationTask {
                     .lang(Lang.JSONLD)
                     .acceptHeader("application/ld+json")
                     .parse(oldData);
-            addCodeList(prefix, oldData, DataModelURI.createModelURI(prefix));
+            addCodeList(prefix, oldData, DataModelURI.Factory.createModelURI(prefix));
         });
     }
 
@@ -84,14 +84,14 @@ public class V16_MigrateLibraryCodeLists implements MigrationTask {
             }
             var clazz = stmt.next().getSubject();
 
-            var resourceURI = DataModelURI.createResourceURI(prefix, clazz.getLocalName());
+            var resourceURI = DataModelURI.Factory.createResourceURI(prefix, clazz.getLocalName());
             var classResource = model.getResource(resourceURI.getResourceURI());
 
             if (classResource.listProperties().hasNext()) {
                 var restrictionResource = ClassMapper.getClassRestrictionList(model, classResource).stream()
                         .filter(r -> {
                             // remove trailing _ (renamed in migration -> not exist in original data)
-                            var onProperty = DataModelURI
+                            var onProperty = DataModelURI.Factory
                                     .fromURI(MapperUtils.propertyToString(r, OWL.onProperty))
                                     .getResourceURI()
                                     .replaceAll("_$", "");
@@ -112,7 +112,7 @@ public class V16_MigrateLibraryCodeLists implements MigrationTask {
         var priorVersion = MapperUtils.propertyToString(model.getResource(newModelURI.getModelURI()), OWL.priorVersion);
 
         if (priorVersion != null) {
-            addCodeList(prefix, oldData, DataModelURI.fromURI(priorVersion));
+            addCodeList(prefix, oldData, DataModelURI.Factory.fromURI(priorVersion));
         }
     }
 }

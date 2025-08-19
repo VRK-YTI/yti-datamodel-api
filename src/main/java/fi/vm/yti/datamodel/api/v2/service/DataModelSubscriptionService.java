@@ -43,7 +43,7 @@ public class DataModelSubscriptionService {
             throw new AuthorizationException("Not allowed to subscribe");
         }
 
-        var dataModelURI = DataModelURI.createModelURI(prefix);
+        var dataModelURI = DataModelURI.Factory.createModelURI(prefix);
 
         if (!repository.graphExists(dataModelURI.getGraphURI())) {
             throw new ResourceNotFoundException(dataModelURI.getGraphURI());
@@ -63,7 +63,7 @@ public class DataModelSubscriptionService {
                 .filter(s -> s.endpoint().equals(user.getEmail()))
                 .map(s -> {
                     var dto = new SubscriptionDTO();
-                    dto.setModelURI(DataModelURI.createModelURI(getModelIdFromARN(s.topicArn())).getModelURI());
+                    dto.setModelURI(DataModelURI.Factory.createModelURI(getModelIdFromARN(s.topicArn())).getModelURI());
                     dto.setSubscriptionARN(s.subscriptionArn());
                     return dto;
                 }).toList();

@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.common.exception.ApiError;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidPropertyShape;
 import fi.vm.yti.datamodel.api.v2.validator.ValidResource;

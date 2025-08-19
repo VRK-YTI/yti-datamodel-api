@@ -1,13 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -70,7 +70,7 @@ public class ResourceService extends BaseResourceService {
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String identifier) {
-        var uri = DataModelURI.createResourceURI(prefix, identifier, version);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, identifier, version);
         var modelUri = uri.getModelURI();
         var versionUri = uri.getGraphURI();
 
@@ -109,7 +109,7 @@ public class ResourceService extends BaseResourceService {
     }
 
     public URI create(String prefix, BaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, dto.getIdentifier());
         var graphUri = dataModelURI.getGraphURI();
         var resourceUri = dataModelURI.getResourceURI();
         if (coreRepository.resourceExistsInGraph(graphUri, resourceUri, false)){
@@ -137,7 +137,7 @@ public class ResourceService extends BaseResourceService {
     }
 
     public void update(String prefix, String identifier, BaseDTO dto) {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, identifier);
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, identifier);
         var graphUri = dataModelURI.getGraphURI();
         var resourceUri = dataModelURI.getResourceURI();
 
@@ -169,7 +169,7 @@ public class ResourceService extends BaseResourceService {
     }
 
     public URI copyPropertyShape(String prefix, String propertyShapeIdentifier, String targetPrefix, String newIdentifier) throws URISyntaxException {
-        var target = DataModelURI.createResourceURI(targetPrefix, newIdentifier);
+        var target = DataModelURI.Factory.createResourceURI(targetPrefix, newIdentifier);
         var targetGraph = target.getModelURI();
         var targetModel = coreRepository.fetch(targetGraph);
         var targetResource = target.getResourceURI();
@@ -182,10 +182,10 @@ public class ResourceService extends BaseResourceService {
 
         DataModelURI source;
         if (namespaces.isPresent()) {
-            var version = DataModelURI.fromURI(namespaces.get()).getVersion();
-            source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier, version);
+            var version = DataModelURI.Factory.fromURI(namespaces.get()).getVersion();
+            source = DataModelURI.Factory.createResourceURI(prefix, propertyShapeIdentifier, version);
         } else {
-            source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier);
+            source = DataModelURI.Factory.createResourceURI(prefix, propertyShapeIdentifier);
         }
 
         var sourceGraphUri = source.getGraphURI();
@@ -226,7 +226,7 @@ public class ResourceService extends BaseResourceService {
      * @return true if resource is one of types
      */
     public boolean checkIfResourceIsOneOfTypes(String resourceUri, List<Resource> types) {
-        var dataModelURI = DataModelURI.fromURI(resourceUri);
+        var dataModelURI = DataModelURI.Factory.fromURI(resourceUri);
 
         var uri = NodeFactory.createURI(resourceUri);
         var typeVar = "?type";
@@ -244,7 +244,7 @@ public class ResourceService extends BaseResourceService {
     }
 
     public boolean checkActiveStatus(String prefix, String uri, String version) {
-        var dataModelURI = DataModelURI.createModelURI(prefix, version);
+        var dataModelURI = DataModelURI.Factory.createModelURI(prefix, version);
 
         var askBuilder = new AskBuilder()
                 .addGraph(NodeFactory.createURI(dataModelURI.getGraphURI()),

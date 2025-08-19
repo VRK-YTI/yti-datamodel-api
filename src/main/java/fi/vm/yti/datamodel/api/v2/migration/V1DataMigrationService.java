@@ -159,7 +159,7 @@ public class V1DataMigrationService {
     }
 
     public void migrateDatamodel(String prefix, Model oldData) throws URISyntaxException {
-        var modelURI = DataModelURI.createModelURI(prefix).getModelURI();
+        var modelURI = DataModelURI.Factory.createModelURI(prefix).getModelURI();
         var oldModelURI = OLD_NAMESPACE + prefix;
 
         if (coreRepository.graphExists(modelURI)) {
@@ -226,7 +226,7 @@ public class V1DataMigrationService {
         var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
         nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
 
-        var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var newModelURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
 
         for (var nodeShape : nodeShapes) {
             var dto = V1DataMapper.mapProfileClass(nodeShape);
@@ -243,7 +243,7 @@ public class V1DataMigrationService {
 
     private void handleAddPropertyShapes(String prefix, Model oldData) {
         var propertyShapes = V1DataMapper.findResourcesByType(oldData, SH.PropertyShape);
-        var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var newModelURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
 
         for (var propertyShape : propertyShapes) {
             var classResource = oldData.listSubjectsWithProperty(SH.property, propertyShape).nextResource();
@@ -278,7 +278,7 @@ public class V1DataMigrationService {
         var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
         nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
 
-        var dataModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var dataModelURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
         var newModel = coreRepository.fetch(dataModelURI);
         for (var nodeShape : nodeShapes) {
             var nodeShapeURI = dataModelURI + NodeFactory.createURI(nodeShape.getURI()).getLocalName();
@@ -289,7 +289,7 @@ public class V1DataMigrationService {
 
                         // if property shape is renamed with suffix, e.g. title-1
                         if (propertyShapeIdMap.containsKey(property)) {
-                            return DataModelURI.createResourceURI(prefix, propertyShapeIdMap.get(property)).getResourceURI();
+                            return DataModelURI.Factory.createResourceURI(prefix, propertyShapeIdMap.get(property)).getResourceURI();
                         }
                         return V1DataMapper.getUriForOldResource(prefix, oldData.getResource(p.getObject().toString()));
                     })
@@ -433,7 +433,7 @@ public class V1DataMigrationService {
             property = RDFS.Class;
         }
 
-        var newModelURI = DataModelURI.createModelURI(prefix);
+        var newModelURI = DataModelURI.Factory.createModelURI(prefix);
 
         V1DataMapper.findResourcesByType(oldData, property).forEach(resource -> {
             if (!includesToModel(modelURI, resource)) {
@@ -460,19 +460,19 @@ public class V1DataMigrationService {
     }
 
     private void handleExists(String prefix, Resource resource, BaseDTO dto) {
-        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
-        var newResourceURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier()).getResourceURI();
+        var graphURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
+        var newResourceURI = DataModelURI.Factory.createResourceURI(prefix, dto.getIdentifier()).getResourceURI();
 
         var hasRenamed = false;
         while (coreRepository.resourceExistsInGraph(graphURI, newResourceURI, false)) {
             var newIdentifier = dto.getIdentifier() + "_";
             dto.setIdentifier(newIdentifier);
-            newResourceURI = DataModelURI.createResourceURI(prefix, newIdentifier).getResourceURI();
+            newResourceURI = DataModelURI.Factory.createResourceURI(prefix, newIdentifier).getResourceURI();
             hasRenamed = true;
         }
 
         if (hasRenamed) {
-            var oldResourceURI = DataModelURI.createResourceURI(prefix, resource.getLocalName()).getResourceURI();
+            var oldResourceURI = DataModelURI.Factory.createResourceURI(prefix, resource.getLocalName()).getResourceURI();
             LOG.info("Renamed resource {}, new URI {}", resource.getURI(), newResourceURI);
             renamedResourcesMap.put(oldResourceURI, newResourceURI);
         }
@@ -595,7 +595,7 @@ public class V1DataMigrationService {
         try {
             var version = "1.0.0";
             dataModelService.createRelease(prefix, version, Status.VALID);
-            var uri = DataModelURI.createModelURI(prefix).getGraphURI();
+            var uri = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
             dataModelService.updateDraftReferences(uri, version);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);

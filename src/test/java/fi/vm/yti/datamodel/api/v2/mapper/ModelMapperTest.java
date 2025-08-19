@@ -5,13 +5,13 @@ import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.dto.LinkDTO;
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.VersionedModelDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -174,7 +174,7 @@ class ModelMapperTest {
     @Test
     void testMapToUpdateJenaModel() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         when(coreRepository.fetch("test")).thenReturn(m);
         var mockModel = ModelFactory.createDefaultModel();
@@ -279,7 +279,7 @@ class ModelMapperTest {
         var dto = new DataModelDTO();
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
 
-        var uri = DataModelURI.createModelURI("test").getModelURI();
+        var uri = DataModelURI.Factory.createModelURI("test").getModelURI();
 
         var modelResource = m.getResource(uri);
         assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires)
@@ -296,7 +296,7 @@ class ModelMapperTest {
     @Test
     void testRemoveExternalNamespace() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
         var dto = new DataModelDTO();
 
         mapper.mapToUpdateJenaModel(uri.getGraphURI(), dto, m, EndpointUtils.mockUser);
@@ -381,7 +381,7 @@ class ModelMapperTest {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         final var graphUri = Constants.DATA_MODEL_NAMESPACE + "test" + Constants.RESOURCE_SEPARATOR;
 
-        var uri = DataModelURI.createModelURI("test", "1.0.1");
+        var uri = DataModelURI.Factory.createModelURI("test", "1.0.1");
         mapper.mapReleaseProperties(m, uri, Status.VALID);
 
         assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/", uri.getGraphURI());
@@ -501,7 +501,7 @@ class ModelMapperTest {
     @Test
     void mapChildOrganization() {
         var mockUser = EndpointUtils.mockUser;
-        var dataModelURI = DataModelURI.createModelURI("test");
+        var dataModelURI = DataModelURI.Factory.createModelURI("test");
         var parent = "74776e94-7f51-48dc-aeec-c084c4defa09";
         var child = "8fab2816-03c5-48cd-9d48-b61048f435da";
 
@@ -524,13 +524,13 @@ class ModelMapperTest {
 
     @Test
     void testMapNewDraft() {
-        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+        var graphURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         var version = ModelFactory.createDefaultModel();
         version.createResource(graphURI.getModelURI())
                 .addProperty(OWL.versionInfo, "1.0.0")
-                .addProperty(OWL2.versionIRI, DataModelURI.createModelURI("test", "1.0.0").getGraphURI());
-        version.createResource(DataModelURI.createResourceURI("test", "class-1").getResourceURI())
+                .addProperty(OWL2.versionIRI, DataModelURI.Factory.createModelURI("test", "1.0.0").getGraphURI());
+        version.createResource(DataModelURI.Factory.createResourceURI("test", "class-1").getResourceURI())
                 .addProperty(RDF.type, OWL.Class);
 
         var newDraft = mapper.mapNewDraft(version, graphURI);
@@ -543,7 +543,7 @@ class ModelMapperTest {
 
         // check that resource defined in version 1.0.0 exists in new draft and old draft resource is removed
         assertTrue(newDraft.contains(
-                ResourceFactory.createResource(DataModelURI.createResourceURI("test", "class-1").getResourceURI()), null));
+                ResourceFactory.createResource(DataModelURI.Factory.createResourceURI("test", "class-1").getResourceURI()), null));
     }
 
 }

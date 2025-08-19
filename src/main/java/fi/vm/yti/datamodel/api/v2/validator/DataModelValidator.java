@@ -62,7 +62,7 @@ public class DataModelValidator extends BaseValidator implements
         // Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel, false);
 
-        if (coreRepository.graphExists(DataModelURI.createModelURI(prefix).getGraphURI())) {
+        if (coreRepository.graphExists(DataModelURI.Factory.createModelURI(prefix).getGraphURI())) {
             // Checking if in use is different for data models and its resources so it is not in the above function
             addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
         }

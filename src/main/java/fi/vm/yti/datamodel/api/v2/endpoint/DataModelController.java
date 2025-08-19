@@ -2,8 +2,8 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.ApiError;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -206,7 +206,7 @@ public class DataModelController {
             @PathVariable @Parameter(description = "Data model's prefix") String prefix,
             @RequestParam @Parameter(description = "Version of the data model to be copied") @ValidSemanticVersion String version) {
         dataModelService.createDraft(prefix, version);
-        var draftURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var draftURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
         return ResponseEntity
                 .created(URI.create(draftURI))
                 .build();
@@ -217,7 +217,7 @@ public class DataModelController {
     public ResponseEntity<List<String>> getReferrerModels(
             @PathVariable @Parameter(description = "Data model prefix") String prefix,
             @RequestParam(required = false) @Parameter(description = "Version of the data model") @ValidSemanticVersion String version) {
-        return ResponseEntity.ok(dataModelService.getReferrerModels(DataModelURI
+        return ResponseEntity.ok(dataModelService.getReferrerModels(DataModelURI.Factory
                         .createModelURI(prefix, version)
                         .getGraphURI()));
     }

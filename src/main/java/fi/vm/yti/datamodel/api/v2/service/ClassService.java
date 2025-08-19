@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.service.GroupManagementService;
@@ -9,7 +10,6 @@ import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -81,7 +81,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String classIdentifier) {
-        var uri = DataModelURI.createResourceURI(prefix, classIdentifier, version);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, classIdentifier, version);
         var modelURI = uri.getModelURI();
         var classURI = uri.getResourceURI();
 
@@ -181,7 +181,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
-        var uri = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI(prefix, dto.getIdentifier());
         var graphUri = uri.getGraphURI();
         var classUri = uri.getResourceURI();
         if(coreRepository.resourceExistsInGraph(graphUri, classUri, false)){
@@ -227,7 +227,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public void update(String prefix, String classIdentifier, BaseDTO dto) {
-        var uri = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, classIdentifier);
         var graph = uri.getGraphURI();
         var classURI = uri.getResourceURI();
 
@@ -296,7 +296,7 @@ public class ClassService extends BaseResourceService {
 
         // collect recursively all property shape uris from target node
         while (targetNode != null) {
-            var targetNodeURI = DataModelURI.fromURI(targetNode);
+            var targetNodeURI = DataModelURI.Factory.fromURI(targetNode);
             if (handledNodeShapes.contains(targetNode)) {
                 throw new MappingError("Circular dependency, cannot add sh:node reference");
             }
@@ -315,8 +315,8 @@ public class ClassService extends BaseResourceService {
                         }
 
                         // add version to property URIs
-                        var propertyURI = DataModelURI.fromURI(uri);
-                        return DataModelURI.createResourceURI(propertyURI.getModelId(),
+                        var propertyURI = DataModelURI.Factory.fromURI(uri);
+                        return DataModelURI.Factory.createResourceURI(propertyURI.getModelId(),
                                 propertyURI.getResourceId(),
                                 targetNodeURI.getVersion()).getResourceVersionURI();
                     })
@@ -354,7 +354,7 @@ public class ClassService extends BaseResourceService {
 
         List<SimpleResourceDTO> attributeRestrictions = new ArrayList<>();
         if (nodeShapeDTO.getTargetClass() != null) {
-            var targetClassURI = DataModelURI.fromURI(nodeShapeDTO.getTargetClass());
+            var targetClassURI = DataModelURI.Factory.fromURI(nodeShapeDTO.getTargetClass());
             if (targetClassURI.isDataModelURI()) {
                 var targetClass = (ClassInfoDTO) get(targetClassURI.getModelId(), targetClassURI.getVersion(), targetClassURI.getResourceId());
                 attributeRestrictions = targetClass.getAttribute();
@@ -388,7 +388,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public void handlePropertyShapeReference(String prefix, String nodeShapeIdentifier, String uri, boolean delete) {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, nodeShapeIdentifier);
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, nodeShapeIdentifier);
         var graphURI = dataModelURI.getGraphURI();
         var model = coreRepository.fetch(graphURI);
         var classURI = dataModelURI.getResourceURI();
@@ -407,7 +407,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public void handleUpdateClassRestrictionReference(String prefix, String classIdentifier, String restrictionURI, String currentTarget, String newTarget) {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, classIdentifier);
         var modelURI = dataModelURI.getModelURI();
         var classURI = dataModelURI.getResourceURI();
         var graphURI = dataModelURI.getGraphURI();
@@ -454,7 +454,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public void handleAddClassRestrictionReference(String prefix, String classIdentifier, String uri) {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, classIdentifier);
         var graphURI = dataModelURI.getGraphURI();
         var classURI = dataModelURI.getResourceURI();
         var model = coreRepository.fetch(graphURI);
@@ -488,7 +488,7 @@ public class ClassService extends BaseResourceService {
     }
 
     public void togglePropertyShape(String prefix, String propertyUri) {
-        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var graphURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
 
         var query = new AskBuilder()
                 .addGraph(NodeFactory.createURI(graphURI), "?s", SH.property, NodeFactory.createURI(propertyUri))
@@ -509,7 +509,7 @@ public class ClassService extends BaseResourceService {
     public void addCodeList(String prefix, String classIdentifier, String attributeUri, Set<String> codeLists) {
 
         Consumer<Resource> action = resource -> {
-            var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+            var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, classIdentifier);
             var isValid = codeLists.stream().allMatch(c -> c.startsWith(ModelConstants.CODELIST_NAMESPACE));
             if (!isValid) {
                 throw new MappingError("Invalid code list URI");
@@ -551,7 +551,7 @@ public class ClassService extends BaseResourceService {
     }
 
     private void handleCodeLists(String prefix, String classIdentifier, String attributeUri, Consumer<Resource> action) {
-        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var dataModelURI = DataModelURI.Factory.createResourceURI(prefix, classIdentifier);
 
         var model = coreRepository.fetch(dataModelURI.getGraphURI());
         check(authorizationManager.hasRightToModel(prefix, model));

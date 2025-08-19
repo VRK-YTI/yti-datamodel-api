@@ -3,28 +3,11 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import java.util.List;
 import java.util.Map;
 
-public class ValidationConstants {
+public class ValidationConstants extends fi.vm.yti.common.validator.ValidationConstants {
 
     private ValidationConstants() {
-        //Utility class
+        super();
     }
-
-    public static final String MSG_VALUE_MISSING = "should-have-value";
-    public static final String MSQ_NOT_ALLOWED = "should-not-have-value";
-    public static final String MSG_VALUE_INVALID = "invalid-value";
-    public static final String MSG_NOT_ALLOWED_UPDATE = "not-allowed-update";
-    public static final String MSG_OVER_CHARACTER_LIMIT = "value-over-character-limit.";
-
-    public static final int TEXT_FIELD_MAX_LENGTH = 150;
-    public static final int EMAIL_FIELD_MAX_LENGTH = 320;
-    public static final int TEXT_AREA_MAX_LENGTH = 5000;
-    public static final int DOCUMENTATION_MAX_LENGTH = 50000;
-
-    // model prefix regex 2-32 character
-    public static final String PREFIX_REGEX = "^[a-z][a-z0-9-_]{1,31}";
-
-    // resource identifier regex 2-120 characters
-    public static final String RESOURCE_IDENTIFIER_REGEX = "^[a-zA-Z][a-zA-Z0-9-_]{1,119}";
 
     public static final Map<String, String> RESERVED_NAMESPACES = Map.ofEntries(
             Map.entry("owl", "http://www.w3.org/2002/07/owl#"),

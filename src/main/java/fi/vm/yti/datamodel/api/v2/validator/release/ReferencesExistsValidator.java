@@ -49,7 +49,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
 
         DataModelUtils.addPrefixesToModel(graph, model);
         var dependencies = DataModelUtils.getInternalReferenceModels(model.getResource(graph)).stream()
-                .map(DataModelURI::fromURI)
+                .map(DataModelURI.Factory::fromURI)
                 .toList();
 
         // check that all references inside the model exists
@@ -65,7 +65,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
         // for checking, version must be removed from the resource URI
         var otherReferences = getInternalReferences(model)
                 .filterKeep(r -> !r.getObject().toString().startsWith(graph))
-                .mapWith(r -> DataModelURI.fromURI(r.getObject().toString()).getResourceURI())
+                .mapWith(r -> DataModelURI.Factory.fromURI(r.getObject().toString()).getResourceURI())
                 .filterKeep(Objects::nonNull)
                 .mapWith(ResourceFactory::createResource)
                 .toSet();
@@ -82,7 +82,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
                             .filter(d -> r.getNameSpace().equals(d.getNamespace()))
                             .findFirst()
                             .ifPresent(d -> {
-                                var resURI = DataModelURI.createResourceURI(d.getModelId(), r.getLocalName(), d.getVersion());
+                                var resURI = DataModelURI.Factory.createResourceURI(d.getModelId(), r.getLocalName(), d.getVersion());
                                 missingExternalReferences.add(ResourceFactory.createResource(resURI.getResourceVersionURI()));
                             });
                 }

@@ -95,7 +95,7 @@ dependencies {
     // NOTE: the project is in maintenance mode
     implementation "com.github.erosb:everit-json-schema:1.14.4"
 
-    implementation "fi.vm.yti:yti-common-backend:0.4.0"
+    implementation "fi.vm.yti:yti-common-backend:0.5.0"
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.jetbrains:annotations:23.0.0"

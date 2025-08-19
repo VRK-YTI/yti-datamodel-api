@@ -2,11 +2,11 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -272,7 +272,7 @@ public class ResourceMapper {
             indexResource.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         }
 
-        var id = DataModelURI.createResourceURI(MapperUtils.propertyToString(modelResource, DCAP.preferredXMLNamespacePrefix),
+        var id = DataModelURI.Factory.createResourceURI(MapperUtils.propertyToString(modelResource, DCAP.preferredXMLNamespacePrefix),
                 resource.getLocalName(), version);
 
         indexResource.setId(id.getResourceVersionURI());
@@ -368,7 +368,7 @@ public class ResourceMapper {
         indexResource.setStatus(Status.VALID);
 
         if (!resource.isAnon()) {
-            var uri = DataModelURI.fromURI(resource.getURI());
+            var uri = DataModelURI.Factory.fromURI(resource.getURI());
             indexResource.setCurie(uri.getCurie(resource.getModel().getGraph().getPrefixMapping()));
         }
 

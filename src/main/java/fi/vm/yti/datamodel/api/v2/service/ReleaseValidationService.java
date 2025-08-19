@@ -36,7 +36,7 @@ public class ReleaseValidationService {
     }
 
     public Map<String, Set<ResourceReferenceDTO>> validateRelease(String prefix) {
-        var model = coreRepository.fetch(DataModelURI.createModelURI(prefix).getGraphURI());
+        var model = coreRepository.fetch(DataModelURI.Factory.createModelURI(prefix).getGraphURI());
         var result = new HashMap<String, Set<ResourceReferenceDTO>>();
 
         check(authorizationManager.hasRightToModel(prefix, model));

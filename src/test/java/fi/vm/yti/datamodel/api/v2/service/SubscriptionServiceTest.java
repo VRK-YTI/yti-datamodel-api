@@ -37,7 +37,7 @@ class SubscriptionServiceTest {
     @Autowired
     DataModelSubscriptionService subscriptionService;
 
-    private static final String GRAPH = DataModelURI.createModelURI("test").getGraphURI();
+    private static final String GRAPH = DataModelURI.Factory.createModelURI("test").getGraphURI();
 
     @BeforeEach
     void setUp() {

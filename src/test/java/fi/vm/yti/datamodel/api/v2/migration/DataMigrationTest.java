@@ -63,7 +63,7 @@ class DataMigrationTest {
     @Test
     void testLibraryMigration() throws URISyntaxException {
         var prefix = "merialsuun";
-        var newModelURI = DataModelURI.createModelURI(prefix).getModelURI();
+        var newModelURI = DataModelURI.Factory.createModelURI(prefix).getModelURI();
 
         when(coreRepository.getServiceCategories())
                 .thenReturn(MapperTestUtils.getModelFromFile("/service-categories.ttl"));
@@ -106,14 +106,14 @@ class DataMigrationTest {
     @Test
     void testProfileMigration() throws URISyntaxException {
         var prefix = "fi-dcatap";
-        var newModelURI = DataModelURI.createModelURI(prefix).getModelURI();
+        var newModelURI = DataModelURI.Factory.createModelURI(prefix).getModelURI();
 
         when(coreRepository.getServiceCategories())
                 .thenReturn(MapperTestUtils.getModelFromFile("/service-categories.ttl"));
         var oldData = MapperTestUtils.getModelFromFile("/migration/fi-dcatap.ttl");
 
         var newModel = ModelFactory.createDefaultModel();
-        newModel.createResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());
+        newModel.createResource(DataModelURI.Factory.createResourceURI(prefix, "CatalogRecord").getResourceURI());
 
         when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
         when(resourceService.exists(prefix, "primaryTopic")).thenReturn(true);
@@ -130,7 +130,7 @@ class DataMigrationTest {
         var identifiers = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
         var datasetNodeShape = baseDtoCaptor.getAllValues().stream().filter(b -> b.getIdentifier().equals("Dataset")).findFirst();
         var createdModel = modelCaptor.getValue();
-        var nodeShapeResource = createdModel.getResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());
+        var nodeShapeResource = createdModel.getResource(DataModelURI.Factory.createResourceURI(prefix, "CatalogRecord").getResourceURI());
         var propertyURIs = nodeShapeResource.listProperties().mapWith(p -> p.getObject().toString()).toList();
 
         assertEquals(prefix, dataModelCaptor.getValue().getPrefix());

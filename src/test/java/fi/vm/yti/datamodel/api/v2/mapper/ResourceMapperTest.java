@@ -5,6 +5,7 @@ import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.dto.UserDTO;
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.AssociationRestriction;
@@ -12,7 +13,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -53,7 +53,7 @@ class ResourceMapperTest {
         dto.setReflexiveProperty(true);
         dto.setTransitiveProperty(true);
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToResource(uri, m, dto, ResourceType.ASSOCIATION, mockUser);
 
         Resource modelResource = m.getResource(uri.getModelURI());
@@ -106,7 +106,7 @@ class ResourceMapperTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setNote(Map.of("fi", "test note"));
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToResource(uri, m, dto, ResourceType.ASSOCIATION, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(uri.getModelURI());
@@ -151,7 +151,7 @@ class ResourceMapperTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setNote(Map.of("fi", "test note"));
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToResource(uri, m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(uri.getModelURI());
@@ -200,7 +200,7 @@ class ResourceMapperTest {
         dto.setRange(Constants.DATA_MODEL_NAMESPACE + "test/RangeClass");
         dto.setFunctionalProperty(true);
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToResource(uri, m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(uri.getModelURI());
@@ -305,7 +305,7 @@ class ResourceMapperTest {
     void testMapToIndexResourceMinimalClass(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var indexClass = ResourceMapper.mapToIndexResource(m, uri.getResourceURI());
 
         assertEquals(ResourceType.CLASS, indexClass.getResourceType());
@@ -322,7 +322,7 @@ class ResourceMapperTest {
     @Test
     void testMapToIndexResourceMinimalAttribute(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestAttribute");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         var indexResource = ResourceMapper.mapToIndexResource(m, uri.getResourceURI());
 
         assertEquals(ResourceType.ATTRIBUTE, indexResource.getResourceType());
@@ -339,7 +339,7 @@ class ResourceMapperTest {
     @Test
     void testMapToIndexResourceMinimalAssociation(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         var indexResource = ResourceMapper.mapToIndexResource(m, uri.getResourceURI());
 
         assertEquals(ResourceType.ASSOCIATION, indexResource.getResourceType());
@@ -357,7 +357,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAttribute() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAttribute");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         var dto = ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
@@ -392,7 +392,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAssociation() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         var dto = ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
@@ -425,7 +425,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAttributeMinimal() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAttribute");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         var dto = ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
@@ -449,7 +449,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAssociationMinimal() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         var dto = ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
@@ -474,14 +474,14 @@ class ResourceMapperTest {
     @Test
     void failMapToResourceInfoDTOClass(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null));
     }
 
     @Test
     void failMapToResourceInfoDTOClassMinimal(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null));
     }
 
@@ -497,7 +497,7 @@ class ResourceMapperTest {
             dto.setCreator(creator);
             dto.setModifier(modifier);
         };
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         var dto = ResourceMapper.mapToResourceInfoDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, userMapper);
 
         assertEquals("creator fake-user", dto.getCreator().getName());
@@ -506,7 +506,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToUpdateModelAttribute() {
-        var uri = DataModelURI.createResourceURI("test", "TestAttribute");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         var resource = m.getResource(uri.getResourceURI());
@@ -562,7 +562,7 @@ class ResourceMapperTest {
     @Test
     void mapToUpdateModelAssociation() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         var resource = m.getResource(uri.getResourceURI());
 
         var dto = new ResourceDTO();
@@ -621,7 +621,7 @@ class ResourceMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestAttribute");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAttribute");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         //null values get removed, so it will change to topObjectProperty
         ResourceMapper.mapToUpdateResource(uri, m, new ResourceDTO(), EndpointUtils.mockUser);
         assertEquals(OWL2.topDataProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
@@ -642,7 +642,7 @@ class ResourceMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestAssociation");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAssociation");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociation");
         //null values get removed, so it will change to topObjectProperty
         ResourceMapper.mapToUpdateResource(uri, m, new ResourceDTO(), EndpointUtils.mockUser);
         assertEquals(OWL2.topObjectProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
@@ -757,7 +757,7 @@ class ResourceMapperTest {
     void testUpdateRestrictionsAfterRangeChange() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
 
-        var uri = DataModelURI.createResourceURI("model", "attribute-1");
+        var uri = DataModelURI.Factory.createResourceURI("model", "attribute-1");
         var newRange = XSD.integer.getURI();
 
         // update range to xsd:integer
@@ -783,7 +783,7 @@ class ResourceMapperTest {
     @Test
     void testMapReferenceResourceAndAddNamespace() {
         var model = ModelFactory.createDefaultModel();
-        var uri = DataModelURI.createResourceURI("test-library", "attr-1");
+        var uri = DataModelURI.Factory.createResourceURI("test-library", "attr-1");
         model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
@@ -803,7 +803,7 @@ class ResourceMapperTest {
     void testMapReferencePropertyShapeAndAddNamespace() {
         var model = ModelFactory.createDefaultModel();
 
-        var uri = DataModelURI.createResourceURI("test-profile", "ps-1");
+        var uri = DataModelURI.Factory.createResourceURI("test-profile", "ps-1");
 
         model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, SuomiMeta.ApplicationProfile)

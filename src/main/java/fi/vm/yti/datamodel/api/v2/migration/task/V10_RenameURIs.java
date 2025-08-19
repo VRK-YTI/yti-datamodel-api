@@ -74,7 +74,7 @@ public class V10_RenameURIs implements MigrationTask {
                 prefix = MapperUtils.getLiteral(modelResource, DCAP.preferredXMLNamespacePrefix, String.class);
                 version = MapperUtils.propertyToString(modelResource, OWL2.versionInfo);
 
-                newGraphURI = DataModelURI.createModelURI(prefix, version).getGraphURI();
+                newGraphURI = DataModelURI.Factory.createModelURI(prefix, version).getGraphURI();
             } else if (oldGraph.startsWith(OLD_POSITION_NS)) {
                 // positions
                 try {
@@ -146,7 +146,7 @@ public class V10_RenameURIs implements MigrationTask {
         var subj = res.toString();
 
         if (subj.equals(modelURI)) {
-            newSubject = DataModelURI.createModelURI(prefix, null).getModelURI();
+            newSubject = DataModelURI.Factory.createModelURI(prefix, null).getModelURI();
         } else if (subj.startsWith(OLD_NS)) {
             newSubject = subj.replace(OLD_NS, Constants.DATA_MODEL_NAMESPACE);
         } else if (subj.startsWith(OLD_POSITION_NS)) {
