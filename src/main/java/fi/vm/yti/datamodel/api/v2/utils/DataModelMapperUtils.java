@@ -3,11 +3,11 @@ package fi.vm.yti.datamodel.api.v2.utils;
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.mapper.OrganizationMapper;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -71,7 +71,7 @@ public class DataModelMapperUtils {
         namespaces.addAll(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires));
         namespaces.add(modelResource.getURI());
 
-        var refNamespace = DataModelURI.fromURI(resourceURI).getGraphURI();
+        var refNamespace = DataModelURI.Factory.fromURI(resourceURI).getGraphURI();
 
         // reference already added
         if (namespaces.contains(refNamespace)) {
@@ -157,7 +157,7 @@ public class DataModelMapperUtils {
         if (uri == null) {
             return null;
         }
-        var u = DataModelURI.fromURI(uri);
+        var u = DataModelURI.Factory.fromURI(uri);
 
         Map<String, String> label = null;
         var resource = model.getResource(uri);
@@ -168,7 +168,7 @@ public class DataModelMapperUtils {
         // if resource is part of the model, add version information to URI (if not draft version)
         if (resource.listProperties().hasNext()
             && model.getResource(u.getModelURI()).hasProperty(OWL2.versionInfo)) {
-            u = DataModelURI.createResourceURI(u.getModelId(),
+            u = DataModelURI.Factory.createResourceURI(u.getModelId(),
                     u.getResourceId(),
                     MapperUtils.propertyToString(model.getResource(u.getModelURI()), OWL2.versionInfo));
         }
@@ -275,7 +275,7 @@ public class DataModelMapperUtils {
                 .filterDrop(RDFNode::isAnon)
                 .filterKeep(subject -> subject.getNameSpace().equals(oldURI.getNamespace()))
                 .forEach(subject -> {
-                    var newSubject = DataModelURI.createResourceURI(newURI.getModelId(), subject.getLocalName()).getResourceURI();
+                    var newSubject = DataModelURI.Factory.createResourceURI(newURI.getModelId(), subject.getLocalName()).getResourceURI();
                     MapperUtils.addUpdateMetadata(subject, user);
                     subject.removeAll(DCTerms.created);
                     subject.removeAll(SuomiMeta.creator);

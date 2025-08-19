@@ -30,7 +30,7 @@ class VisualizationDataMapperTest {
     void mapClassWithParent() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
 
-        var uri = DataModelURI.createResourceURI("visu", "natural-person");
+        var uri = DataModelURI.Factory.createResourceURI("visu", "natural-person");
         var classDTO = VisualizationMapper.mapClass(uri.getResourceURI(), model, libraryNamespaces);
 
         assertEquals("Luonnollinen henkilö", classDTO.getLabel().get("fi"));
@@ -159,7 +159,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapApplicationProfileClass() {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
-        var classURI = DataModelURI.createResourceURI("visuprof", "person").getResourceURI();
+        var classURI = DataModelURI.Factory.createResourceURI("visuprof", "person").getResourceURI();
         var externalResources = new HashSet<Resource>();
 
         var classDTO = (VisualizationNodeShapeDTO) VisualizationMapper

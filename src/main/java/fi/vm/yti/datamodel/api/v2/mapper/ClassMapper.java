@@ -3,11 +3,11 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -287,7 +287,7 @@ public class ClassMapper {
 
     public static void addClassResourcesToDTO(List<IndexResource> uriResult, Set<SimpleResourceDTO> restrictions, ClassInfoDTO dto) {
         for (var restriction : restrictions) {
-            var uri = DataModelURI.fromURI(restriction.getUri());
+            var uri = DataModelURI.Factory.fromURI(restriction.getUri());
             var resource = uriResult.stream()
                     .filter(result -> result.getId().equals(restriction.getUri()))
                     .findFirst();
@@ -299,7 +299,7 @@ public class ClassMapper {
                     var versionIRI = res.getVersionIri();
                     if (versionIRI != null) {
                         restriction.setVersionIri(versionIRI);
-                        restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
+                        restriction.setVersion(DataModelURI.Factory.fromURI(versionIRI).getVersion());
                     }
                 }
                 restriction.setCurie(res.getCurie());
@@ -320,7 +320,7 @@ public class ClassMapper {
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
         restrictions.forEach(restriction -> {
-            var uri = DataModelURI.fromURI(restriction.getUri());
+            var uri = DataModelURI.Factory.fromURI(restriction.getUri());
             var resource = model.getResource(uri.getResourceURI());
             var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
 
@@ -333,7 +333,7 @@ public class ClassMapper {
                 var versionIRI = MapperUtils.propertyToString(model.getResource(ns), OWL2.versionIRI);
                 if (versionIRI != null) {
                     restriction.setVersionIri(versionIRI);
-                    restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
+                    restriction.setVersion(DataModelURI.Factory.fromURI(versionIRI).getVersion());
                 }
             }
 
@@ -365,7 +365,7 @@ public class ClassMapper {
             }
 
             var dto = new SimplePropertyShapeDTO();
-            var uri = DataModelURI.fromURI(resource.getURI());
+            var uri = DataModelURI.Factory.fromURI(resource.getURI());
 
             dto.setUri(uri.getResourceURI());
             dto.setIdentifier(resource.getLocalName());
@@ -385,7 +385,7 @@ public class ClassMapper {
         resources.forEach(r -> {
             var dto = new SimplePropertyShapeDTO();
 
-            var modelURI = DataModelURI.fromURI(r.getUri());
+            var modelURI = DataModelURI.Factory.fromURI(r.getUri());
             dto.setUri(r.getUri());
             dto.setIdentifier(r.getIdentifier());
             dto.setModelId(modelURI.getModelId());

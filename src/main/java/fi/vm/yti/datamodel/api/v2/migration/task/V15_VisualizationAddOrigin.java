@@ -46,7 +46,7 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
         for (var graph : graphs) {
             LOG.info("Migrating visualization for {}", graph);
 
-            var dataModelURI = DataModelURI.fromURI(graph);
+            var dataModelURI = DataModelURI.Factory.fromURI(graph);
             VisualizationResultDTO visuData;
             Model positions;
             var positionGraphURI = getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion());

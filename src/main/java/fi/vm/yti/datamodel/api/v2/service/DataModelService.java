@@ -2,13 +2,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
@@ -88,18 +88,18 @@ public class DataModelService {
     }
 
     public DataModelInfoDTO getDraft(String prefix) {
-        var uri = DataModelURI.createModelURI(prefix);
+        var uri = DataModelURI.Factory.createModelURI(prefix);
         var model = coreRepository.fetch(uri.getGraphURI());
         check(authorizationManager.hasRightToModel(prefix, model, true));
         return mapper.mapToDataModelDTO(prefix, model, groupManagementService.mapUser());
     }
 
     public DataModelInfoDTO get(String prefix, String version) {
-        var uri = DataModelURI.createModelURI(prefix, version);
+        var uri = DataModelURI.Factory.createModelURI(prefix, version);
         if (version == null) {
             version = getLatestVersion(uri);
         }
-        var model = coreRepository.fetch(DataModelURI.createModelURI(prefix, version).getGraphURI());
+        var model = coreRepository.fetch(DataModelURI.Factory.createModelURI(prefix, version).getGraphURI());
         var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
@@ -118,13 +118,13 @@ public class DataModelService {
         if (versionIRI.isEmpty()) {
             throw new ResourceNotFoundException(uri.getModelId());
         }
-        version = DataModelURI.fromURI(versionIRI.get(0)).getVersion();
+        version = DataModelURI.Factory.fromURI(versionIRI.get(0)).getVersion();
         return version;
     }
 
     public URI create(DataModelDTO dto, GraphType modelType) throws URISyntaxException {
         check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations(), Role.DATA_MODEL_EDITOR));
-        var graphUri = DataModelURI.createModelURI(dto.getPrefix()).getGraphURI();
+        var graphUri = DataModelURI.Factory.createModelURI(dto.getPrefix()).getGraphURI();
 
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
@@ -140,7 +140,7 @@ public class DataModelService {
     }
 
     public void update(String prefix, DataModelDTO dto) {
-        var graphUri = DataModelURI.createModelURI(prefix).getGraphURI();
+        var graphUri = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
         var model = coreRepository.fetch(graphUri);
 
         check(authorizationManager.hasRightToModel(prefix, model));
@@ -151,10 +151,10 @@ public class DataModelService {
         var modelResource = model.getResource(graphUri);
 
         var oldNamespaces = DataModelUtils.getInternalReferenceModels(modelResource).stream()
-                .map(DataModelURI::fromURI)
+                .map(DataModelURI.Factory::fromURI)
                 .toList();
         var newNamespaces = dto.getInternalNamespaces().stream()
-                .map(DataModelURI::fromURI)
+                .map(DataModelURI.Factory::fromURI)
                 .toList();
 
         mapper.mapToUpdateJenaModel(graphUri, dto, model, userProvider.getUser());
@@ -184,7 +184,7 @@ public class DataModelService {
     }
 
     public void delete(String prefix, String version) {
-        var dataModelURI = DataModelURI.createModelURI(prefix, version);
+        var dataModelURI = DataModelURI.Factory.createModelURI(prefix, version);
         var graphUri = dataModelURI.getGraphURI();
 
         var model = coreRepository.fetch(graphUri);
@@ -228,11 +228,11 @@ public class DataModelService {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
             return true;
         }
-        return coreRepository.graphExists(DataModelURI.createModelURI(prefix).getModelURI());
+        return coreRepository.graphExists(DataModelURI.Factory.createModelURI(prefix).getModelURI());
     }
 
     public ResponseEntity<String> export(String prefix, String version, String accept, boolean showAsFile, String language) {
-        var uri = DataModelURI.createModelURI(prefix, version);
+        var uri = DataModelURI.Factory.createModelURI(prefix, version);
 
         Model exportedModel;
         Model model;
@@ -300,7 +300,7 @@ public class DataModelService {
     }
 
     public URI createRelease(String prefix, String version, Status status) throws URISyntaxException {
-        var modelVersionURI = DataModelURI.createModelURI(prefix, version);
+        var modelVersionURI = DataModelURI.Factory.createModelURI(prefix, version);
         var modelUri = modelVersionURI.getModelURI();
         var graphUri = modelVersionURI.getGraphURI();
         if(!status.equals(Status.SUGGESTED) && !status.equals(Status.VALID)){
@@ -316,7 +316,7 @@ public class DataModelService {
         check(authorizationManager.hasRightToModel(prefix, model));
         var priorVersionUri = MapperUtils.propertyToString(model.getResource(modelUri), OWL.priorVersion);
         if(priorVersionUri != null){
-            var priorVersion = DataModelURI.fromURI(priorVersionUri).getVersion();
+            var priorVersion = DataModelURI.Factory.fromURI(priorVersionUri).getVersion();
             var result = SemVer.compareSemVers(priorVersion, version);
             if(result == 0){
                 throw new MappingError("Same version number");
@@ -356,7 +356,7 @@ public class DataModelService {
 
     public List<ModelVersionInfo> getPriorVersions(String prefix, String version){
 
-        var modelUri = DataModelURI.createModelURI(prefix);
+        var modelUri = DataModelURI.Factory.createModelURI(prefix);
         //Would be nice to do traverse the graphs using SPARQL starting from the correct versionIRI but currently that traversing named graphs is not supported
         var constructBuilder = new ConstructBuilder()
                 .addConstruct("?g", OWL2.versionInfo, "?versionInfo")
@@ -385,7 +385,7 @@ public class DataModelService {
     }
 
     public void updateVersionedModel(String prefix, String version, VersionedModelDTO dto) {
-        var uri = DataModelURI.createModelURI(prefix, version);
+        var uri = DataModelURI.Factory.createModelURI(prefix, version);
 
         var model = coreRepository.fetch(uri.getGraphURI());
         check(authorizationManager.hasRightToModel(prefix, model));
@@ -422,8 +422,8 @@ public class DataModelService {
     }
 
     public String copyDataModel(String oldPrefix, String version, String newPrefix) {
-        var oldURI = DataModelURI.createModelURI(oldPrefix, version);
-        var newURI = DataModelURI.createModelURI(newPrefix);
+        var oldURI = DataModelURI.Factory.createModelURI(oldPrefix, version);
+        var newURI = DataModelURI.Factory.createModelURI(newPrefix);
 
         logger.info("Copying graph {}, new prefix {}", oldURI.getGraphURI(), newPrefix);
 
@@ -461,7 +461,7 @@ public class DataModelService {
     public void createDraft(String prefix, String version) {
         logger.info("Create new draft from datamodel {} version {}", prefix, version);
 
-        var versionURI = DataModelURI.createModelURI(prefix, version);
+        var versionURI = DataModelURI.Factory.createModelURI(prefix, version);
 
         // the old draft graph should be removed before creating new one
         if (coreRepository.graphExists(versionURI.getDraftGraphURI())) {

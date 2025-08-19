@@ -9,7 +9,7 @@ class DataModelURITest {
 
     @Test
     void modelVersionURI() {
-        var uri = DataModelURI.createModelURI("test", "1.0.0");
+        var uri = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         String modelURI = "https://iri.suomi.fi/model/test/";
         String modelVersionURI = "https://iri.suomi.fi/model/test/1.0.0/";
@@ -22,7 +22,7 @@ class DataModelURITest {
 
     @Test
     void modelURI() {
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         String expected = "https://iri.suomi.fi/model/test/";
         assertEquals(expected, uri.getModelURI());
@@ -33,7 +33,7 @@ class DataModelURITest {
 
     @Test
     void resourceVersionURI() {
-        var uri = DataModelURI.createResourceURI("test", "class-1", "1.0.0");
+        var uri = DataModelURI.Factory.createResourceURI("test", "class-1", "1.0.0");
 
         String modelURI = "https://iri.suomi.fi/model/test/";
         String modelVersionURI = "https://iri.suomi.fi/model/test/1.0.0/";
@@ -51,7 +51,7 @@ class DataModelURITest {
 
     @Test
     void resourceURI() {
-        var uri = DataModelURI.createResourceURI("test", "class-1");
+        var uri = DataModelURI.Factory.createResourceURI("test", "class-1");
 
         String modelURI = "https://iri.suomi.fi/model/test/";
         String resourceURI = "https://iri.suomi.fi/model/test/class-1";
@@ -67,7 +67,7 @@ class DataModelURITest {
 
     @Test
     void createFromResourceVersionURI() {
-        var uri = DataModelURI.fromURI("https://iri.suomi.fi/model/test/1.2.3/class-1");
+        var uri = DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/1.2.3/class-1");
 
         assertEquals("test", uri.getModelId());
         assertEquals("1.2.3", uri.getVersion());
@@ -76,7 +76,7 @@ class DataModelURITest {
 
     @Test
     void createFromResourceURI() {
-        var uri = DataModelURI.fromURI("https://iri.suomi.fi/model/test/class-1");
+        var uri = DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/class-1");
 
         assertEquals("test", uri.getModelId());
         assertNull(uri.getVersion());
@@ -85,7 +85,7 @@ class DataModelURITest {
 
     @Test
     void createFromModelURI() {
-        var uri = DataModelURI.fromURI("https://iri.suomi.fi/model/test/");
+        var uri = DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/");
 
         assertEquals("test", uri.getModelId());
         assertNull(uri.getVersion());
@@ -94,7 +94,7 @@ class DataModelURITest {
 
     @Test
     void createFromModelVersionURI() {
-        var uri = DataModelURI.fromURI("https://iri.suomi.fi/model/test/14.10.12/");
+        var uri = DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/14.10.12/");
 
         assertEquals("test", uri.getModelId());
         assertEquals("14.10.12", uri.getVersion());
@@ -103,19 +103,19 @@ class DataModelURITest {
 
     @Test
     void modelURIWithContentType() {
-        var url = DataModelURI.fromURI("https://iri.suomi.fi/model/test/1.0.3/test2.ttl");
+        var url = DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/1.0.3/test2.ttl");
 
         assertEquals("test", url.getModelId());
         assertEquals("text/turtle", url.getContentType());
-        assertEquals("application/rdf+xml", DataModelURI.fromURI("https://iri.suomi.fi/model/test/14.10.12/test.rdf").getContentType());
-        assertEquals("application/ld+json", DataModelURI.fromURI("https://iri.suomi.fi/model/test/14.10.12/test.json").getContentType());
-        assertNull(DataModelURI.fromURI("https://iri.suomi.fi/model/test/14.10.12/test").getContentType());
-        assertNull(DataModelURI.fromURI("https://iri.suomi.fi/model/test.foo").getContentType());
+        assertEquals("application/rdf+xml", DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/14.10.12/test.rdf").getContentType());
+        assertEquals("application/ld+json", DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/14.10.12/test.json").getContentType());
+        assertNull(DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test/14.10.12/test").getContentType());
+        assertNull(DataModelURI.Factory.fromURI("https://iri.suomi.fi/model/test.foo").getContentType());
     }
 
     @Test
     void externalURI() {
-        var uri = DataModelURI.fromURI("http://www.w3.org/2000/01/rdf-schema#Literal");
+        var uri = DataModelURI.Factory.fromURI("http://www.w3.org/2000/01/rdf-schema#Literal");
 
         assertEquals("http://www.w3.org/2000/01/rdf-schema#", uri.getNamespace());
         assertEquals("Literal", uri.getResourceId());

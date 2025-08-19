@@ -93,7 +93,7 @@ class ClassServiceTest {
     void getLibraryClass() {
         var model = ModelFactory.createDefaultModel();
 
-        var resourceURI = DataModelURI.createResourceURI("test", "TestClass");
+        var resourceURI = DataModelURI.Factory.createResourceURI("test", "TestClass");
         model.createResource(resourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
@@ -120,7 +120,7 @@ class ClassServiceTest {
     void getWithVersion() {
         var model = ModelFactory.createDefaultModel();
 
-        var resourceURI = DataModelURI.createResourceURI("test", "TestClass", "1.0.1");
+        var resourceURI = DataModelURI.Factory.createResourceURI("test", "TestClass", "1.0.1");
         model.createResource(resourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
@@ -168,8 +168,8 @@ class ClassServiceTest {
 
     @Test
     void createNodeShape() throws URISyntaxException {
-        var resourceURI = DataModelURI.createResourceURI("test", "node-shape-1");
-        var nodeRefURI = DataModelURI.createResourceURI("foo", "bar", "1.2.3");
+        var resourceURI = DataModelURI.Factory.createResourceURI("test", "node-shape-1");
+        var nodeRefURI = DataModelURI.Factory.createResourceURI("foo", "bar", "1.2.3");
 
         var model = ModelFactory.createDefaultModel();
         model.createResource(resourceURI.getModelURI())
@@ -201,7 +201,7 @@ class ClassServiceTest {
         var result = model.getResource(uri.toString());
         assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/node-shape-1", uri.toString());
 
-        var expectedPropertyURI = DataModelURI.createResourceURI(nodeRefURI.getModelId(), "node-property", nodeRefURI.getVersion());
+        var expectedPropertyURI = DataModelURI.Factory.createResourceURI(nodeRefURI.getModelId(), "node-property", nodeRefURI.getVersion());
         assertEquals(expectedPropertyURI.getResourceVersionURI(), result.listProperties(SH.property).toList().get(0).getObject().toString());
         assertEquals(nodeRefURI.getResourceVersionURI(), result.getProperty(SH.node).getObject().toString());
     }
@@ -212,8 +212,8 @@ class ClassServiceTest {
         var profilePrefix = "test-profile";
         var libPrefix = "test";
 
-        var nodeShapeURI = DataModelURI.createResourceURI(profilePrefix, "node-shape-1");
-        var targetClassURI = DataModelURI.createResourceURI(libPrefix, "class-1", "1.0.0");
+        var nodeShapeURI = DataModelURI.Factory.createResourceURI(profilePrefix, "node-shape-1");
+        var targetClassURI = DataModelURI.Factory.createResourceURI(libPrefix, "class-1", "1.0.0");
 
         var modelResource = model.createResource(nodeShapeURI.getModelURI())
                 .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT))
@@ -221,12 +221,12 @@ class ClassServiceTest {
                 .addProperty(DCTerms.language, "fi");
         var targetClass = ResourceFactory.createResource(targetClassURI.getResourceVersionURI());
 
-        var targetProperty1 = DataModelURI.createResourceURI(libPrefix, "attribute-1", "1.0.0");
-        var targetProperty2 = DataModelURI.createResourceURI(libPrefix, "other-property", "1.0.0");
+        var targetProperty1 = DataModelURI.Factory.createResourceURI(libPrefix, "attribute-1", "1.0.0");
+        var targetProperty2 = DataModelURI.Factory.createResourceURI(libPrefix, "other-property", "1.0.0");
 
         // create resource with sh:path reference to library's attribute-1 resource
         // new property based on test:attribute-1 should not be created
-        model.createResource(DataModelURI.createResourceURI(profilePrefix, "attribute-1").getResourceURI())
+        model.createResource(DataModelURI.Factory.createResourceURI(profilePrefix, "attribute-1").getResourceURI())
                 .addProperty(SH.path, ResourceFactory.createResource(targetProperty1.getResourceVersionURI()));
 
         var dto = new NodeShapeDTO();
@@ -271,8 +271,8 @@ class ClassServiceTest {
         var nodeShapeProperties = MapperUtils.arrayPropertyToList(nodeShapeResult, SH.property);
         assertEquals(2, nodeShapeProperties.size());
         assertTrue(List.of(
-                DataModelURI.createResourceURI(profilePrefix, "other-property").getResourceURI(),
-                DataModelURI.createResourceURI(profilePrefix, "attribute-1").getResourceURI()
+                DataModelURI.Factory.createResourceURI(profilePrefix, "other-property").getResourceURI(),
+                DataModelURI.Factory.createResourceURI(profilePrefix, "attribute-1").getResourceURI()
             ).containsAll(nodeShapeProperties));
 
         @SuppressWarnings("unchecked")
@@ -283,7 +283,7 @@ class ClassServiceTest {
 
         var indexedProperties = indexCaptor.getValue();
         assertEquals(1, indexedProperties.size());
-        assertEquals(DataModelURI.createResourceURI(
+        assertEquals(DataModelURI.Factory.createResourceURI(
                 profilePrefix, "other-property").getResourceURI(), indexedProperties.get(0).getId());
     }
 
@@ -339,7 +339,7 @@ class ClassServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(coreRepository).deleteResource(DataModelURI
+        verify(coreRepository).deleteResource(DataModelURI.Factory
                 .createResourceURI("test", "Identifier")
                 .getResourceURI());
         verify(indexService).deleteResourceFromIndex(anyString());
@@ -497,8 +497,8 @@ class ClassServiceTest {
 
     @Test
     void testAddAndRemoveCodeListToLibraryAttribute() {
-        var classURI = DataModelURI.createResourceURI("test", "TestClass");
-        var attributeURI = DataModelURI.createResourceURI("test", "TestAttribute");
+        var classURI = DataModelURI.Factory.createResourceURI("test", "TestClass");
+        var attributeURI = DataModelURI.Factory.createResourceURI("test", "TestAttribute");
         var codeListURI = "http://uri.suomi.fi/codelist/test-code-list";
 
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");

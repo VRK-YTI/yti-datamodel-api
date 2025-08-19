@@ -25,7 +25,7 @@ class MapperUtilsTest {
     void renameResource() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var resource = m.getResource(uri.getResourceURI());
 
         assertEquals(uri.getResourceURI(), resource.getURI());
@@ -39,8 +39,8 @@ class MapperUtilsTest {
 
     @Test
     void copyModel() {
-        var oldGraphURI = DataModelURI.createModelURI("test", "1.0.0");
-        var newGraphURI = DataModelURI.createModelURI("new_prefix");
+        var oldGraphURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
+        var newGraphURI = DataModelURI.Factory.createModelURI("new_prefix");
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var mockUser = EndpointUtils.mockUser;
 
@@ -54,7 +54,7 @@ class MapperUtilsTest {
 
         var modelResource = copy.getResource(newGraphURI.getModelURI());
 
-        var classResource = copy.getResource(DataModelURI
+        var classResource = copy.getResource(DataModelURI.Factory
                 .createResourceURI("new_prefix", "TestClass")
                 .getResourceURI());
 

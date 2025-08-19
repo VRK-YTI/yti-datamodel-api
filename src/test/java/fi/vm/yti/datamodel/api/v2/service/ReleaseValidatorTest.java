@@ -48,8 +48,8 @@ class ReleaseValidatorTest {
     void testExternalReferencesExists() {
         var model = MapperTestUtils.getModelFromFile("/model-with-missing-references.ttl");
 
-        var notExist_1 = DataModelURI.createResourceURI("linked", "not-exists-1", "1.0.0");
-        var notExist_2 = DataModelURI.createResourceURI("linked", "not-exists-2", "1.0.0");
+        var notExist_1 = DataModelURI.Factory.createResourceURI("linked", "not-exists-1", "1.0.0");
+        var notExist_2 = DataModelURI.Factory.createResourceURI("linked", "not-exists-2", "1.0.0");
         var solution_1 = mockQueryResult(notExist_1.getResourceURI());
         var solution_2 = mockQueryResult(notExist_2.getResourceURI());
 
@@ -85,7 +85,7 @@ class ReleaseValidatorTest {
     @Test
     void testInternalReferenceExists() {
         var model = ModelFactory.createDefaultModel();
-        var dataModelURI = DataModelURI.createModelURI("test").getModelURI();
+        var dataModelURI = DataModelURI.Factory.createModelURI("test").getModelURI();
         model.setNsPrefixes(ModelConstants.PREFIXES);
 
         model.createResource(dataModelURI)
@@ -108,9 +108,9 @@ class ReleaseValidatorTest {
     @Test
     void testLibraryReferenceValidator() {
         var model = ModelFactory.createDefaultModel();
-        var dataModelURI_1 = DataModelURI.createResourceURI("test", "incomplete-1");
-        var dataModelURI_2 = DataModelURI.createResourceURI("test", "incomplete-2");
-        var dataModelURI_3 = DataModelURI.createResourceURI("test", "incomplete-3");
+        var dataModelURI_1 = DataModelURI.Factory.createResourceURI("test", "incomplete-1");
+        var dataModelURI_2 = DataModelURI.Factory.createResourceURI("test", "incomplete-2");
+        var dataModelURI_3 = DataModelURI.Factory.createResourceURI("test", "incomplete-3");
 
         model.createResource(dataModelURI_1.getModelURI())
                 .addProperty(RDF.type, SuomiMeta.ApplicationProfile);

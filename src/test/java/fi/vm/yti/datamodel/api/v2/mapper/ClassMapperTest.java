@@ -4,11 +4,11 @@ import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.dto.UserDTO;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -32,7 +32,7 @@ class ClassMapperTest {
 
     @Test
     void testCreateClassAndMapToModelLibrary() {
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         var mockUser = EndpointUtils.mockUser;
 
@@ -87,7 +87,7 @@ class ClassMapperTest {
         dto.setSubClassOf(Collections.emptySet());
         dto.setIdentifier("Identifier");
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ClassMapper.createOntologyClassAndMapToModel(uri, m, dto, mockUser);
 
         Resource modelResource = m.getResource(uri.getModelURI());
@@ -104,7 +104,7 @@ class ClassMapperTest {
     void testMapToClassDTOLibrary(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var dto = ClassMapper.mapToClassDTO(m, DataModelURI.createResourceURI("test", "TestClass"), MapperTestUtils.getMockOrganizations(), false, null);
+        var dto = ClassMapper.mapToClassDTO(m, DataModelURI.Factory.createResourceURI("test", "TestClass"), MapperTestUtils.getMockOrganizations(), false, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -132,7 +132,7 @@ class ClassMapperTest {
     void testMapToClassMinimalDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var dto = ClassMapper.mapToClassDTO(m, uri, MapperTestUtils.getMockOrganizations(), true, null);
 
         // not authenticated
@@ -165,7 +165,7 @@ class ClassMapperTest {
             dto.setModifier(modifier);
         };
 
-        var dto = ClassMapper.mapToClassDTO(m, DataModelURI.createResourceURI("test", "TestClass"), MapperTestUtils.getMockOrganizations(), true, userMapper);
+        var dto = ClassMapper.mapToClassDTO(m, DataModelURI.Factory.createResourceURI("test", "TestClass"), MapperTestUtils.getMockOrganizations(), true, userMapper);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
         assertEquals("creator fake-user", dto.getCreator().getName());
@@ -174,7 +174,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToUpdateClassLibrary(){
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource(uri.getResourceURI());
         var mockUser = EndpointUtils.mockUser;
@@ -226,7 +226,7 @@ class ClassMapperTest {
     // null values should delete (some) properties from resource
     @Test
     void testMapToUpdateClassNullValuesDTO(){
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource(uri.getResourceURI());
         var mockUser = EndpointUtils.mockUser;
@@ -262,7 +262,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToUpdateClassEmptyValuesDTO(){
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource(uri.getResourceURI());
         var mockUser = EndpointUtils.mockUser;
@@ -298,7 +298,7 @@ class ClassMapperTest {
     void testAddAttributeAndAssociationRestrictionsToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_resource_query_model.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "rangetest2");
+        var uri = DataModelURI.Factory.createResourceURI("test", "rangetest2");
         var restriction = new SimpleResourceDTO();
         restriction.setUri(uri.getResourceURI());
         restriction.setRange(new UriDTO("http://www.w3.org/2001/XMLSchema#integer", "xsd:integer"));
@@ -339,10 +339,10 @@ class ClassMapperTest {
 
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
 
-        var classResource1 = model.getResource(DataModelURI.createResourceURI("model", "class-1").getResourceURI());
-        var classResource2 = model.getResource(DataModelURI.createResourceURI("model", "class-2").getResourceURI());
-        var attributeResource1 = model.getResource(DataModelURI.createResourceURI("model", "attribute-1").getResourceURI());
-        var attributeResource2 = model.getResource(DataModelURI.createResourceURI("model", "attribute-2").getResourceURI());
+        var classResource1 = model.getResource(DataModelURI.Factory.createResourceURI("model", "class-1").getResourceURI());
+        var classResource2 = model.getResource(DataModelURI.Factory.createResourceURI("model", "class-2").getResourceURI());
+        var attributeResource1 = model.getResource(DataModelURI.Factory.createResourceURI("model", "attribute-1").getResourceURI());
+        var attributeResource2 = model.getResource(DataModelURI.Factory.createResourceURI("model", "attribute-2").getResourceURI());
 
         ClassMapper.mapClassRestrictionProperty(model, classResource2, attributeResource1);
 
@@ -391,11 +391,11 @@ class ClassMapperTest {
     void testMapUpdateClassRestriction() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
 
-        var uri = DataModelURI.createResourceURI("model", "class-update-target");
+        var uri = DataModelURI.Factory.createResourceURI("model", "class-update-target");
         var classResource = model.getResource(uri.getResourceURI());
-        var restrictionURI = DataModelURI.createResourceURI("model", "association-1").getResourceURI();
-        var oldTarget = DataModelURI.createResourceURI("model", "class-2").getResourceURI();
-        var newTarget = DataModelURI.createResourceURI("model", "class-x").getResourceURI();
+        var restrictionURI = DataModelURI.Factory.createResourceURI("model", "association-1").getResourceURI();
+        var oldTarget = DataModelURI.Factory.createResourceURI("model", "class-2").getResourceURI();
+        var newTarget = DataModelURI.Factory.createResourceURI("model", "class-x").getResourceURI();
 
         ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, oldTarget,
                 newTarget, ResourceType.ASSOCIATION);
@@ -414,11 +414,11 @@ class ClassMapperTest {
     void testMapUpdateClassRestrictionDuplicate() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
 
-        var uri = DataModelURI.createResourceURI("model", "class-update-target");
+        var uri = DataModelURI.Factory.createResourceURI("model", "class-update-target");
         var classResource = model.getResource(uri.getResourceURI());
-        var restrictionURI = DataModelURI.createResourceURI("model", "association-1").getResourceURI();
-        var oldTarget = DataModelURI.createResourceURI("model", "class-2").getResourceURI();
-        var newTargetDuplicate = DataModelURI.createResourceURI("model", "class-3").getResourceURI();
+        var restrictionURI = DataModelURI.Factory.createResourceURI("model", "association-1").getResourceURI();
+        var oldTarget = DataModelURI.Factory.createResourceURI("model", "class-2").getResourceURI();
+        var newTargetDuplicate = DataModelURI.Factory.createResourceURI("model", "class-3").getResourceURI();
 
         assertThrows(MappingError.class, () ->
                 ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI,
@@ -428,7 +428,7 @@ class ClassMapperTest {
     @Test
     void testMapReferenceResourceAndAddNamespace() {
         var model = ModelFactory.createDefaultModel();
-        var uri = DataModelURI.createResourceURI("test", "class-1");
+        var uri = DataModelURI.Factory.createResourceURI("test", "class-1");
 
         model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
@@ -459,7 +459,7 @@ class ClassMapperTest {
     @Test
     void testMapTerminologyToModel() {
         var model = ModelFactory.createDefaultModel();
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
@@ -469,7 +469,7 @@ class ClassMapperTest {
         classDTO.setIdentifier("class-1");
         classDTO.setSubject(Constants.TERMINOLOGY_NAMESPACE + "test-terminology/concept-1");
 
-        ClassMapper.createOntologyClassAndMapToModel(DataModelURI.createModelURI("test"), model, classDTO, EndpointUtils.mockUser);
+        ClassMapper.createOntologyClassAndMapToModel(DataModelURI.Factory.createModelURI("test"), model, classDTO, EndpointUtils.mockUser);
 
         var requires = model.getResource(uri.getModelURI())
                 .listProperties(DCTerms.requires)

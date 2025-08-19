@@ -2,13 +2,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
@@ -96,7 +96,7 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", null, "TestResource");
         }
-        var uri = DataModelURI.createResourceURI("test", "TestResource");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestResource");
 
         verify(coreRepository).resourceExistsInGraph(uri.getGraphURI(), uri.getResourceURI());
         verify(coreRepository).fetch(uri.getGraphURI());
@@ -114,7 +114,7 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", "1.0.1", "TestResource");
         }
-        var dataModelURI = DataModelURI.createResourceURI("test", "TestResource", "1.0.1");
+        var dataModelURI = DataModelURI.Factory.createResourceURI("test", "TestResource", "1.0.1");
 
         verify(coreRepository).resourceExistsInGraph(dataModelURI.getGraphURI(), dataModelURI.getResourceURI());
         verify(coreRepository).fetch(dataModelURI.getGraphURI());
@@ -129,7 +129,7 @@ class ResourceServiceTest {
         var model = EndpointUtils.getMockModel(OWL.Ontology);
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-        var dataModelURI = DataModelURI.createResourceURI("test", "Identifier");
+        var dataModelURI = DataModelURI.Factory.createResourceURI("test", "Identifier");
         var dto = createResourceDTO(false, resourceType);
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToResource(any(DataModelURI.class), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class)))
@@ -153,7 +153,7 @@ class ResourceServiceTest {
         var model = EndpointUtils.getMockModel(DCAP.DCAP);
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-        var dataModelURI = DataModelURI.createResourceURI("test", "Identifier");
+        var dataModelURI = DataModelURI.Factory.createResourceURI("test", "Identifier");
         var dto = createAssociationRestriction(false);
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(any(DataModelURI.class), any(Model.class), any(PropertyShapeDTO.class), any(ResourceType.class), any(YtiUser.class)))
@@ -225,7 +225,7 @@ class ResourceServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(coreRepository).deleteResource(DataModelURI
+        verify(coreRepository).deleteResource(DataModelURI.Factory
                 .createResourceURI("test", "identifier")
                 .getResourceURI());
         verify(indexService).deleteResourceFromIndex(anyString());
@@ -234,8 +234,8 @@ class ResourceServiceTest {
 
     @Test
     void copyPropertyShape() throws URISyntaxException {
-        var sourceURI = DataModelURI.createResourceURI("test", "Identifier");
-        var targetURI = DataModelURI.createResourceURI("newTest", "newId");
+        var sourceURI = DataModelURI.Factory.createResourceURI("test", "Identifier");
+        var targetURI = DataModelURI.Factory.createResourceURI("newTest", "newId");
         when(coreRepository.resourceExistsInGraph(sourceURI.getGraphURI(), sourceURI.getResourceURI())).thenReturn(true);
         var m = ModelFactory.createDefaultModel();
         m.createResource(sourceURI.getModelURI())
@@ -274,8 +274,8 @@ class ResourceServiceTest {
 
     @Test
     void failCopyPropertyShapeModelType() {
-        var sourceURI = DataModelURI.createResourceURI("test", "Identifier");
-        var targetURI = DataModelURI.createResourceURI("newTest", "newId");
+        var sourceURI = DataModelURI.Factory.createResourceURI("test", "Identifier");
+        var targetURI = DataModelURI.Factory.createResourceURI("newTest", "newId");
         //Only one is application profile
         when(coreRepository.resourceExistsInGraph(sourceURI.getGraphURI(), sourceURI.getResourceURI())).thenReturn(true);
         var m = ModelFactory.createDefaultModel();
@@ -356,7 +356,7 @@ class ResourceServiceTest {
     @Test
     void testRenameResource() throws URISyntaxException {
         var model = ModelFactory.createDefaultModel();
-        var uri = DataModelURI.createResourceURI("test", "resource-1");
+        var uri = DataModelURI.Factory.createResourceURI("test", "resource-1");
         model.createResource(uri.getResourceURI())
                 .addProperty(DCTerms.identifier, "resource-1")
                 .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)))
@@ -388,7 +388,7 @@ class ResourceServiceTest {
 
     @Test
     void testRenameResourceExists() {
-        var uri = DataModelURI.createResourceURI("test", "resource-1");
+        var uri = DataModelURI.Factory.createResourceURI("test", "resource-1");
 
         when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getResourceURI())).thenReturn(true);
         when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getModelURI() + "foo")).thenReturn(true);

@@ -255,7 +255,7 @@ public class SearchIndexService {
     }
 
     private void getNamespacesFromModel(ResourceSearchRequest request, List<String> internalNamespaces, List<String> externalNamespaces){
-        var uri = DataModelURI.fromURI(request.getLimitToDataModel());
+        var uri = DataModelURI.Factory.fromURI(request.getLimitToDataModel());
         var model = coreRepository.fetch(uri.getGraphURI());
         var resource = model.getResource(uri.getModelURI());
         var allNamespaces = new ArrayList<>(MapperUtils.arrayPropertyToList(resource, OWL.imports));
