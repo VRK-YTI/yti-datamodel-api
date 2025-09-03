@@ -166,7 +166,12 @@ public class ResourceQueryFactory {
         }
 
         if (request.getIncludeDraftFrom() != null && !request.getIncludeDraftFrom().isEmpty()) {
-            builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", request.getIncludeDraftFrom()));
+            var allowedDraftModels = request.getIncludeDraftFrom().stream()
+                    .filter(restrictedDataModels::contains)
+                    .toList();
+            if (!allowedDraftModels.isEmpty()) {
+                builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDraftModels));
+            }
         }
 
         builder.should(QueryFactoryUtils.termsQuery("namespace", externalNamespaces))
