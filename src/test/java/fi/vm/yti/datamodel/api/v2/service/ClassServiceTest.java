@@ -105,7 +105,9 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(terminologyService.mapConcept()).thenReturn(conceptMapper);
-        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
+        var searchResult = new SearchResponseDTO<IndexResource>();
+        searchResult.setResponseObjects(List.of());
+        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(searchResult);
 
         classService.get(resourceURI.getModelId(), null, resourceURI.getResourceId());
 
@@ -132,8 +134,11 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(terminologyService.mapConcept()).thenReturn(conceptMapper);
-        when(searchIndexService.findResourcesByURI(anySet(), anyString())).thenReturn(new SearchResponseDTO<>());
-        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
+
+        var searchResult = new SearchResponseDTO<IndexResource>();
+        searchResult.setResponseObjects(List.of());
+        when(searchIndexService.findResourcesByURI(anySet(), anyString())).thenReturn(searchResult);
+        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(searchResult);
 
         classService.get(resourceURI.getModelId(), resourceURI.getVersion(), resourceURI.getResourceId());
 
