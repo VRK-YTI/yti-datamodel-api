@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ReferencesExistsValidator extends ReleaseValidator {
@@ -93,7 +94,9 @@ public class ReferencesExistsValidator extends ReleaseValidator {
                         .forEach(stmt -> missingObjects.add(mapResourceReference(model, stmt)));
             }
         }
-        return missingObjects;
+        return missingObjects.stream()
+                .filter(o -> o.getResourceURI() != null) // filter orphans blank nodes without resource URI
+                .collect(Collectors.toSet());
     }
 
     @Override
