@@ -392,7 +392,7 @@ public class ClassMapper {
             dto.setCurie(r.getCurie());
             dto.setLabel(r.getLabel());
             dto.setVersion(r.getFromVersion());
-            dto.setVersionIri(r.getId());
+            dto.setVersionIri(r.getVersionIri());
 
             if (r.getResourceType().equals(ResourceType.ATTRIBUTE)) {
                 nodeShapeDTO.getAttribute().add(dto);
