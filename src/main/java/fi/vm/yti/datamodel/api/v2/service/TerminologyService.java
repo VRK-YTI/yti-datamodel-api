@@ -1,11 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SimpleResourceDTO;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import fi.vm.yti.datamodel.api.v2.repository.TerminologyRepository;
 import org.apache.jena.arq.querybuilder.AskBuilder;
