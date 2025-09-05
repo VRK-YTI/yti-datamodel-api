@@ -116,12 +116,12 @@ public class ClassService extends BaseResourceService {
                     }).collect(Collectors.toSet());
 
             var restrictionInternalURIs = restrictions.stream()
-                    .filter(u -> u.getUri().startsWith(modelURI))
+                    .filter(u -> NodeFactory.createURI(u.getUri()).getNameSpace().equals(modelURI))
                     .collect(Collectors.toSet());
 
             var restrictionExternalURIs = restrictions.stream()
                     .map(SimpleResourceDTO::getUri)
-                    .filter(u -> !u.startsWith(modelURI))
+                    .filter(u -> !NodeFactory.createURI(u).getNameSpace().equals(modelURI))
                     .collect(Collectors.toSet());
 
             var uriResultExternal = searchIndexService.findResourcesByURI(restrictionExternalURIs, null);
@@ -141,7 +141,7 @@ public class ClassService extends BaseResourceService {
             // Find external resources from OpenSearch,
             // resources from current data model are fetched from model's resources
             var externalPropertyURIs = allProperties.stream()
-                    .filter(p -> !p.startsWith(modelURI))
+                    .filter(p -> !NodeFactory.createURI(p).getNameSpace().equals(modelURI))
                     .collect(Collectors.toSet());
             var externalResult = searchIndexService.findResourcesByURI(externalPropertyURIs, null).getResponseObjects();
 
