@@ -6,6 +6,7 @@ public class SimplePropertyShapeDTO {
     private String identifier;
     private String uri;
     private String version;
+    private String versionIri;
     private String modelId;
     private Map<String, String> label;
     private boolean deactivated;
@@ -66,6 +67,14 @@ public class SimplePropertyShapeDTO {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getVersionIri() {
+        return versionIri;
+    }
+
+    public void setVersionIri(String versionIri) {
+        this.versionIri = versionIri;
     }
 
     public String getCurie() {

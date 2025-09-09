@@ -4,6 +4,7 @@ import fi.vm.yti.common.dto.OrganizationDTO;
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.enums.Status;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +17,7 @@ public class ResourceInfoBaseDTO extends ResourceCommonInfoDTO {
     private String curie;
     private Set<OrganizationDTO> contributor;
     private String contact;
+    private Set<String> removedProperties = new HashSet<>();
 
     public String getEditorialNote() {
         return editorialNote;
@@ -81,4 +83,11 @@ public class ResourceInfoBaseDTO extends ResourceCommonInfoDTO {
         this.contact = contact;
     }
 
+    public Set<String> getRemovedProperties() {
+        return removedProperties;
+    }
+
+    public void setRemovedProperties(Set<String> removedProperties) {
+        this.removedProperties = removedProperties;
+    }
 }

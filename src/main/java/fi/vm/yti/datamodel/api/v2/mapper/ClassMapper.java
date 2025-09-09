@@ -144,9 +144,9 @@ public class ClassMapper {
 
     public static void mapNodeShapeProperties(Model model, String classURI, Set<String> propertyURIs) {
         var classRes = model.getResource(classURI);
+        var modelResource = model.getResource(classRes.getNameSpace());
         propertyURIs.forEach(
-                (var uri) -> classRes.addProperty(SH.property, ResourceFactory.createResource(uri))
-        );
+                (var uri) -> DataModelMapperUtils.addResourceRelationship(modelResource, classRes, SH.property, uri));
     }
 
     public static void mapToUpdateOntologyClass(Model model, String modelUri, Resource classResource, ClassDTO classDTO, YtiUser user) {
@@ -392,6 +392,7 @@ public class ClassMapper {
             dto.setCurie(r.getCurie());
             dto.setLabel(r.getLabel());
             dto.setVersion(r.getFromVersion());
+            dto.setVersionIri(r.getVersionIri());
 
             if (r.getResourceType().equals(ResourceType.ATTRIBUTE)) {
                 nodeShapeDTO.getAttribute().add(dto);
@@ -433,7 +434,11 @@ public class ClassMapper {
         if (restrictedProperties.contains(propertyURI) || !MapperUtils.hasType(classResource, SH.NodeShape)) {
             throw new MappingError("Resource is not sh:PropertyShape or property already exists");
         }
-        classResource.addProperty(SH.property, ResourceFactory.createResource(propertyURI));
+        DataModelMapperUtils.addResourceRelationship(
+                classResource.getModel().getResource(classResource.getNameSpace()),
+                classResource,
+                SH.property,
+                propertyURI);
     }
 
     public static void mapRemoveNodeShapeProperty(Model model, Resource classResource, String propertyURI,
@@ -518,6 +523,7 @@ public class ClassMapper {
             // association with the same uri and target
             if (removed == null && propertyResource.getURI().equals(onProperty) && (
                     MapperUtils.hasType(propertyResource, OWL.DatatypeProperty, OWL.AnnotationProperty)
+                    || !propertyResource.listProperties().hasNext() // property doesn't exist anymore
                     || Objects.equals(target, someValuesFrom))
             ) {
                 removed = rdfNode;
