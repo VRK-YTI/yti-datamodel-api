@@ -159,20 +159,9 @@ public class DataModelService {
 
         mapper.mapToUpdateJenaModel(graphUri, dto, model, userProvider.getUser());
 
-        // check if version of some dependency model has changed
-        var versionChangedNamespaces = new HashMap<String, String>();
-        newNamespaces.forEach(newNS -> oldNamespaces.stream()
-                .filter(oldNS -> oldNS.isSameModel(newNS))
-                .findFirst()
-                .ifPresent(oldNS -> versionChangedNamespaces.put(oldNS.getGraphURI(), newNS.getGraphURI()))
-        );
-
-        // change version of the dependency model, all references will be updated to new version
-        handleNamespaceVersionChange(model, versionChangedNamespaces);
-
         // check if dependency model with references is removed,
         // removing is not allowed if there are any references to the namespace being removed
-        handleNamespaceRemove(model, newNamespaces, oldNamespaces, versionChangedNamespaces);
+        handleNamespaceRemove(model, newNamespaces, oldNamespaces);
 
         addPrefixes(model, dto);
 
@@ -506,6 +495,46 @@ public class DataModelService {
         return result.listSubjects().mapWith(Resource::getURI).toList();
     }
 
+    /**
+     * Updates all triples with an object referring to model with referencePrefix
+     *
+     * @param prefix model's prefix
+     * @param referenceURI reference model's URI
+     * @param newVersion new version (null = draft)
+     */
+    public void changeReferenceVersion(String prefix, String referenceURI, String newVersion) {
+        var oldReferenceURI = DataModelURI.Factory.fromURI(referenceURI);
+
+        if (Objects.equals(oldReferenceURI.getVersion(), newVersion)) {
+            throw new MappingError("Same version given");
+        }
+        var datamodelURI = DataModelURI.Factory.createModelURI(prefix);
+        var model = coreRepository.fetch(datamodelURI.getGraphURI());
+
+        var newReferenceURI = DataModelURI.Factory.createModelURI(oldReferenceURI.getModelId(), newVersion).getGraphURI();
+
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        // find all statements with old namespace and change them to refer to new one
+        var stmtList = model.listStatements()
+                // need to drop triple "subj owl:imports <newNs>" because otherwise it will be removed when changing from draft to published version
+                .filterDrop(s -> s.getObject().toString().equals(newReferenceURI))
+                .filterKeep(objectHasNamespace(oldReferenceURI.getGraphURI()))
+                .toList();
+
+        stmtList.forEach(s -> {
+            var newStatement = ResourceFactory.createStatement(
+                    s.getSubject(),
+                    s.getPredicate(),
+                    ResourceFactory.createResource(newReferenceURI + s.getObject().asResource().getLocalName())
+            );
+            model.add(newStatement);
+        });
+
+        model.remove(stmtList);
+        coreRepository.put(datamodelURI.getGraphURI(), model);
+    }
+
     private void addPrefixes(Model model, DataModelDTO dto) {
         dto.getExternalNamespaces().forEach(ns -> model.getGraph().getPrefixMapping().setNsPrefix(ns.getPrefix(), ns.getNamespace()));
     }
@@ -532,8 +561,7 @@ public class DataModelService {
 
     private static void handleNamespaceRemove(Model model,
                                                List<DataModelURI> newNamespaces,
-                                               List<DataModelURI> oldNamespaces,
-                                               HashMap<String, String> versionChangedNamespaces) {
+                                               List<DataModelURI> oldNamespaces) {
         Set<String> removedNamespaces = new HashSet<>();
         if (newNamespaces.isEmpty()) {
             removedNamespaces = oldNamespaces.stream()
@@ -541,8 +569,7 @@ public class DataModelService {
                     .collect(Collectors.toSet());
         } else if (!oldNamespaces.isEmpty()) {
             oldNamespaces.stream()
-                    .filter(oldNs -> !newNamespaces.contains(oldNs)
-                                     && !versionChangedNamespaces.containsKey(oldNs.getGraphURI()))
+                    .filter(oldNs -> !newNamespaces.contains(oldNs))
                     .map(DataModelURI::getGraphURI)
                     .forEach(removedNamespaces::add);
         }
@@ -557,26 +584,6 @@ public class DataModelService {
             if (!stmtList.isEmpty()) {
                 throw new MappingError(getNamespaceRemoveErrorMessage(model, stmtList));
             }
-        });
-    }
-
-    private static void handleNamespaceVersionChange(Model model, HashMap<String, String> versionChangedNamespaces) {
-        versionChangedNamespaces.forEach((oldNS, newNS) -> {
-            var stmtList = model.listStatements()
-                    // need to drop triple "subj owl:imports <newNs>" because otherwise it will be removed when changing from draft to published version
-                    .filterDrop(s -> s.getObject().toString().equals(newNS))
-                    .filterKeep(objectHasNamespace(oldNS))
-                    .toList();
-
-            stmtList.forEach(s -> {
-                var newStatement = ResourceFactory.createStatement(
-                        s.getSubject(),
-                        s.getPredicate(),
-                        ResourceFactory.createResource(newNS + s.getObject().asResource().getLocalName())
-                );
-                model.add(newStatement);
-            });
-            model.remove(stmtList);
         });
     }
 
@@ -602,7 +609,7 @@ public class DataModelService {
     private static Predicate<Statement> objectHasNamespace(String ns) {
         return stmt -> {
             var s = stmt.getObject();
-            return s.isResource() && s.toString().startsWith(ns);
+            return s.isResource() && s.asResource().getNameSpace().equals(ns);
         };
     }
 }

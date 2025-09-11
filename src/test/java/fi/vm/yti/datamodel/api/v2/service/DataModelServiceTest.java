@@ -430,11 +430,13 @@ class DataModelServiceTest {
     }
 
     @Test
-    void changeLinkedModelVersions() {
+    void changeReferenceVersion() {
         var resourceURI = DataModelURI.Factory.createResourceURI("test", "class-1");
         var linkedResourceURI_1 = DataModelURI.Factory.createResourceURI("linked", "link-1", "1.0.0");
         var linkedResourceURI_2 = DataModelURI.Factory.createResourceURI("linked", "link-1", "2.0.0");
         var linkedResourceURI_3 = DataModelURI.Factory.createResourceURI("foo", "bar-1", "1.0.0");
+        var linkedDraftResourceURI = DataModelURI.Factory.createResourceURI("test-draft", "test-1");
+
         var model = ModelFactory.createDefaultModel();
         var prefix = resourceURI.getModelId();
 
@@ -445,89 +447,55 @@ class DataModelServiceTest {
 
         model.createResource(resourceURI.getResourceURI())
                 .addProperty(RDFS.subClassOf, ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI()))
+                .addProperty(OWL.equivalentClass, ResourceFactory.createResource(linkedResourceURI_2.getDraftGraphURI()))
+                .addProperty(OWL.intersectionOf, ResourceFactory.createResource(linkedDraftResourceURI.getResourceURI()))
                 .addProperty(OWL.disjointWith, ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI()));
 
         when(coreRepository.fetch(resourceURI.getGraphURI())).thenReturn(model);
         when(authorizationManager.hasRightToModel(eq(prefix), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
 
-        var dto = new DataModelDTO();
-        var resourceSubject = ResourceFactory.createResource(resourceURI.getResourceURI());
-        var modelSubject = ResourceFactory.createResource(resourceURI.getModelURI());
+        var originalSize = model.size();
 
-        // should change references to version 2.0.0
-        dto.setInternalNamespaces(Set.of(linkedResourceURI_2.getGraphURI()));
+        // change reference model "linked" from version 1.0.0 to 2.0.0
+        dataModelService.changeReferenceVersion("test", DataModelURI.Factory.createModelURI("linked", "1.0.0").getGraphURI(), "2.0.0");
+        // change draft version to version 1.0.0
+        dataModelService.changeReferenceVersion("test",  DataModelURI.Factory.createModelURI("test-draft").getGraphURI(), "1.0.0");
 
-        dataModelService.update(prefix, dto);
+        assertEquals(originalSize, model.size());
 
-        // rdfs:subClassOf -> version 2.0.0
+        // should change reference to 1.0.0 -> 2.0.0
         assertTrue(model.contains(
-                resourceSubject,
+                ResourceFactory.createResource(resourceURI.getResourceURI()),
                 RDFS.subClassOf,
                 ResourceFactory.createResource(linkedResourceURI_2.getResourceVersionURI())));
 
-        // references to other models should not change
+        // should remain the same
         assertTrue(model.contains(
-                resourceSubject,
+                ResourceFactory.createResource(resourceURI.getResourceURI()),
                 OWL.disjointWith,
                 ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
+
+        // should remain the same
+        assertTrue(model.contains(
+                ResourceFactory.createResource(resourceURI.getResourceURI()),
+                OWL.equivalentClass,
+                ResourceFactory.createResource(linkedResourceURI_2.getDraftGraphURI())));
 
         // owl:imports -> version 2.0.0
         assertTrue(model.contains(
-                modelSubject,
+                ResourceFactory.createResource(resourceURI.getModelURI()),
                 OWL.imports,
                 ResourceFactory.createResource(linkedResourceURI_2.getGraphURI())));
 
-        // model doesn't contain any references to version 1.0.0
-        assertTrue(model.listObjects().toList().stream()
-                .noneMatch(containsReferences(linkedResourceURI_1.getGraphURI())));
-
-        // change reference to draft version
-        dto.setInternalNamespaces(Set.of(linkedResourceURI_2.getDraftGraphURI()));
-        dataModelService.update(prefix, dto);
-
-        // rdfs:subClassOf -> draft version (without version number)
+        // draft reference should change to version 1.0.0
         assertTrue(model.contains(
-                resourceSubject,
-                RDFS.subClassOf,
-                ResourceFactory.createResource(linkedResourceURI_2.getResourceURI())));
+                ResourceFactory.createResource(resourceURI.getResourceURI()),
+                OWL.intersectionOf,
+                ResourceFactory.createResource(DataModelURI.Factory
+                        .createResourceURI("test-draft", "test-1", "1.0.0")
+                        .getResourceVersionURI())));
 
-        assertTrue(model.contains(
-                resourceSubject,
-                OWL.disjointWith,
-                ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
-
-        assertTrue(model.contains(
-                modelSubject,
-                OWL.imports,
-                ResourceFactory.createResource(linkedResourceURI_2.getDraftGraphURI())));
-
-        // model doesn't contain any references to version 2.0.0
-        assertTrue(model.listObjects().toList().stream()
-                .noneMatch(containsReferences(linkedResourceURI_2.getGraphURI())));
-
-        // change back to version 1.0.0
-        dto.setInternalNamespaces(Set.of(linkedResourceURI_1.getGraphURI()));
-        dataModelService.update(prefix, dto);
-
-        assertTrue(model.contains(
-                resourceSubject,
-                RDFS.subClassOf,
-                ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI())));
-
-        assertTrue(model.contains(
-                resourceSubject,
-                OWL.disjointWith,
-                ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
-
-        assertTrue(model.contains(
-                modelSubject,
-                OWL.imports,
-                ResourceFactory.createResource(linkedResourceURI_1.getGraphURI())));
-
-        // model doesn't contain any references to draft version
-        assertTrue(model.listObjects().toList().stream()
-                .noneMatch(containsReferences(linkedResourceURI_1.getDraftGraphURI())));
     }
 
     @Test

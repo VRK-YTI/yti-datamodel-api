@@ -95,7 +95,7 @@ public class DataModelMapperUtils {
             throw new MappingError(String.format("Namespace %s not in owl:imports or dcterms:requires", refNamespace));
         }
 
-        modelResource.addProperty(referenceProperty, refNamespace);
+        modelResource.addProperty(referenceProperty, ResourceFactory.createResource(refNamespace));
         resource.addProperty(property, ResourceFactory.createResource(resourceURI));
     }
 
