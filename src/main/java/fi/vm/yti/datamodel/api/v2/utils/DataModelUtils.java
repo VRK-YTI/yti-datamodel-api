@@ -95,8 +95,11 @@ public class DataModelUtils {
         var subj = statement.getSubject();
         if (subj.isAnon()) {
             while (subj.isAnon()) {
-                var stmt = model.listStatements(null, null, subj).next();
-                subj = stmt.getSubject();
+                var iterator = model.listStatements(null, null, subj);
+                if (!iterator.hasNext()) {
+                    break;
+                }
+                subj = iterator.next().getSubject();
             }
         }
         return subj;

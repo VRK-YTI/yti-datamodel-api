@@ -7,6 +7,7 @@ import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
@@ -115,16 +116,17 @@ public class ClassService extends BaseResourceService {
                     }).collect(Collectors.toSet());
 
             var restrictionInternalURIs = restrictions.stream()
-                    .filter(u -> u.getUri().startsWith(modelURI))
+                    .filter(u -> NodeFactory.createURI(u.getUri()).getNameSpace().equals(modelURI))
                     .collect(Collectors.toSet());
 
             var restrictionExternalURIs = restrictions.stream()
                     .map(SimpleResourceDTO::getUri)
-                    .filter(u -> !u.startsWith(modelURI))
+                    .filter(u -> !NodeFactory.createURI(u).getNameSpace().equals(modelURI))
                     .collect(Collectors.toSet());
 
             var uriResultExternal = searchIndexService.findResourcesByURI(restrictionExternalURIs, null);
 
+            dto.setRemovedProperties(getNonExistingResources(restrictionExternalURIs, uriResultExternal.getResponseObjects()));
             ClassMapper.addClassResourcesToDTO(model, restrictionInternalURIs, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
             ClassMapper.addClassResourcesToDTO(uriResultExternal.getResponseObjects(), restrictions, (ClassInfoDTO) dto);
         } else {
@@ -138,16 +140,18 @@ public class ClassService extends BaseResourceService {
 
             // Find external resources from OpenSearch,
             // resources from current data model are fetched from model's resources
-            var externalResult = searchIndexService.findResourcesByURI(allProperties.stream()
-                    .filter(p -> !p.startsWith(modelURI))
-                    .collect(Collectors.toSet()), null)
-                .getResponseObjects();
+            var externalPropertyURIs = allProperties.stream()
+                    .filter(p -> !NodeFactory.createURI(p).getNameSpace().equals(modelURI))
+                    .collect(Collectors.toSet());
+            var externalResult = searchIndexService.findResourcesByURI(externalPropertyURIs, null).getResponseObjects();
 
             var nodeShapeDTO = (NodeShapeInfoDTO) dto;
             ClassMapper.addCurrentModelNodeShapeResources(model, classResource, nodeShapeDTO);
             ClassMapper.addExternalNodeShapeResource(externalResult, nodeShapeDTO);
             ClassMapper.updateNodeShapeResourceRestrictions(model, nodeShapeDTO.getAttribute(), shNodeProperties);
             ClassMapper.updateNodeShapeResourceRestrictions(model, nodeShapeDTO.getAssociation(), shNodeProperties);
+
+            nodeShapeDTO.setRemovedProperties(getNonExistingResources(externalPropertyURIs, externalResult));
         }
 
         terminologyService.mapConcept().accept(dto);
@@ -423,7 +427,8 @@ public class ClassService extends BaseResourceService {
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
         var restrictionResource = getResourceWithVersion(restrictionURI, includedNamespaces);
 
-        if (!restrictionResource.listProperties().hasNext()) {
+        // if we are removing resource, it doesn't matter if it exists or not
+        if (!restrictionResource.listProperties().hasNext() && newTarget != null) {
             throw new ResourceNotFoundException(restrictionURI);
         }
 
@@ -589,5 +594,15 @@ public class ClassService extends BaseResourceService {
         var restrictionResource = tempModel.createResource(restrictionURI);
         resourceResult.listProperties().forEach(prop -> restrictionResource.addProperty(prop.getPredicate(), prop.getObject()));
         return restrictionResource;
+    }
+
+    private static Set<String> getNonExistingResources(Set<String> externalPropertyURIs, List<IndexResource> externalResult) {
+        var existingURIs = externalResult.stream()
+                .map(IndexResource::getId)
+                .collect(Collectors.toSet());
+
+        externalPropertyURIs.removeAll(existingURIs);
+
+        return externalPropertyURIs;
     }
 }
