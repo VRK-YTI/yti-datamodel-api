@@ -513,12 +513,14 @@ public class DataModelService {
 
         var newReferenceURI = DataModelURI.Factory.createModelURI(oldReferenceURI.getModelId(), newVersion).getGraphURI();
 
+        if (!coreRepository.graphExists(newReferenceURI)) {
+            throw new ResourceNotFoundException(newReferenceURI);
+        }
+
         check(authorizationManager.hasRightToModel(prefix, model));
 
         // find all statements with old namespace and change them to refer to new one
         var stmtList = model.listStatements()
-                // need to drop triple "subj owl:imports <newNs>" because otherwise it will be removed when changing from draft to published version
-                .filterDrop(s -> s.getObject().toString().equals(newReferenceURI))
                 .filterKeep(objectHasNamespace(oldReferenceURI.getGraphURI()))
                 .toList();
 
@@ -528,8 +530,19 @@ public class DataModelService {
                     s.getPredicate(),
                     ResourceFactory.createResource(newReferenceURI + s.getObject().asResource().getLocalName())
             );
-            model.add(newStatement);
+            if (!model.contains(newStatement)) {
+                model.add(newStatement);
+            }
         });
+
+        // In some cases references are stored as literals instead of resources. Make sure that they are removed as well.
+        List.of(OWL.imports, DCTerms.requires).forEach(property ->
+                stmtList.add(ResourceFactory.createStatement(
+                    ResourceFactory.createResource(datamodelURI.getModelResourceURI()),
+                    property,
+                    ResourceFactory.createPlainLiteral(oldReferenceURI.getGraphURI())
+                ))
+        );
 
         model.remove(stmtList);
         coreRepository.put(datamodelURI.getGraphURI(), model);
@@ -609,7 +622,7 @@ public class DataModelService {
     private static Predicate<Statement> objectHasNamespace(String ns) {
         return stmt -> {
             var s = stmt.getObject();
-            return s.isResource() && s.asResource().getNameSpace().equals(ns);
+            return s.isResource() && Objects.equals(s.asResource().getNameSpace(), ns);
         };
     }
 }

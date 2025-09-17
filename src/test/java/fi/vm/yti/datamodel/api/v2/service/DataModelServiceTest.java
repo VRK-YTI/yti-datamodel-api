@@ -435,7 +435,8 @@ class DataModelServiceTest {
         var linkedResourceURI_1 = DataModelURI.Factory.createResourceURI("linked", "link-1", "1.0.0");
         var linkedResourceURI_2 = DataModelURI.Factory.createResourceURI("linked", "link-1", "2.0.0");
         var linkedResourceURI_3 = DataModelURI.Factory.createResourceURI("foo", "bar-1", "1.0.0");
-        var linkedDraftResourceURI = DataModelURI.Factory.createResourceURI("test-draft", "test-1");
+        var linkedDraftResourceURI_1 = DataModelURI.Factory.createResourceURI("test-draft", "test-1");
+        var linkedDraftModelURI_2 = DataModelURI.Factory.createModelURI("test-draft", "1.0.0");
 
         var model = ModelFactory.createDefaultModel();
         var prefix = resourceURI.getModelId();
@@ -443,17 +444,19 @@ class DataModelServiceTest {
         // create model with one class with some references to other models' classes
         model.createResource(resourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(OWL.imports, ResourceFactory.createResource(linkedResourceURI_1.getGraphURI()));
+                .addProperty(OWL.imports, ResourceFactory.createResource(linkedResourceURI_1.getGraphURI()))
+                .addProperty(OWL.imports, ResourceFactory.createResource(linkedDraftModelURI_2.getGraphURI()));
 
         model.createResource(resourceURI.getResourceURI())
                 .addProperty(RDFS.subClassOf, ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI()))
                 .addProperty(OWL.equivalentClass, ResourceFactory.createResource(linkedResourceURI_2.getDraftGraphURI()))
-                .addProperty(OWL.intersectionOf, ResourceFactory.createResource(linkedDraftResourceURI.getResourceURI()))
+                .addProperty(OWL.intersectionOf, ResourceFactory.createResource(linkedDraftResourceURI_1.getResourceURI()))
                 .addProperty(OWL.disjointWith, ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI()));
 
         when(coreRepository.fetch(resourceURI.getGraphURI())).thenReturn(model);
         when(authorizationManager.hasRightToModel(eq(prefix), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(coreRepository.graphExists(anyString())).thenReturn(true);
 
         var originalSize = model.size();
 
@@ -496,6 +499,42 @@ class DataModelServiceTest {
                         .createResourceURI("test-draft", "test-1", "1.0.0")
                         .getResourceVersionURI())));
 
+        assertTrue(model.contains(
+                ResourceFactory.createResource(resourceURI.getModelURI()),
+                OWL.imports,
+                ResourceFactory.createResource(DataModelURI.Factory.createModelURI("test-draft", "1.0.0").getGraphURI())));
+    }
+
+    @Test
+    void changeReferenceVersion_UpdateProperties() {
+        var model = ModelFactory.createDefaultModel();
+        var uri = DataModelURI.Factory.createModelURI("test");
+        var ref1 = DataModelURI.Factory.createModelURI("ref", "1.0.0");
+        var ref2 = DataModelURI.Factory.createModelURI("ref", "2.0.0");
+        var ref3 = DataModelURI.Factory.createModelURI("ref");
+
+        model.createResource(uri.getModelResourceURI())
+                .addProperty(OWL.imports, ResourceFactory.createResource(ref1.getGraphURI()))
+                .addProperty(OWL.imports, ResourceFactory.createResource(ref2.getGraphURI()))
+                .addProperty(OWL.imports, ResourceFactory.createResource(ref3.getGraphURI()))
+                .addProperty(OWL.imports, ref1.getGraphURI());
+
+        when(coreRepository.fetch(uri.getGraphURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(eq("test"), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(coreRepository.graphExists(anyString())).thenReturn(true);
+
+        // change reference from 1.0.0 to 2.0.0
+        dataModelService.changeReferenceVersion("test", ref1.getGraphURI(), "2.0.0");
+
+        var importProperties = MapperUtils.arrayPropertyToList(model.getResource(uri.getModelResourceURI()), OWL.imports);
+
+        // 2.0.0 exists already, so it won't be added again
+        // 1.0.0 should be removed
+        // property with literal value should be removed
+        // draft version will remain the same
+        assertEquals(2, importProperties.size());
+        assertTrue(importProperties.containsAll(List.of(ref2.getGraphURI(), ref3.getGraphURI())));
     }
 
     @Test

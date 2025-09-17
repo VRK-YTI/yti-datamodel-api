@@ -223,11 +223,11 @@ public class DataModelController {
     }
 
     @Operation(summary = "Change reference model's version")
-    @PostMapping("/{prefix}/change-reference-version")
+    @PutMapping("/{prefix}/change-reference-version")
     public ResponseEntity<Void> changeReferenceVersion(
             @PathVariable @Parameter(description = "Data model prefix") String prefix,
             @RequestParam @Parameter(description = "Reference model's prefix") String referenceURI,
-            @RequestParam(required = false) @Parameter(description = "Old version number (draft = null)") String newVersion) {
+            @RequestParam(required = false) @Parameter(description = "New version number. Use draft if not specified") @ValidSemanticVersion String newVersion) {
         dataModelService.changeReferenceVersion(prefix, referenceURI, newVersion);
         return ResponseEntity.ok().build();
     }
