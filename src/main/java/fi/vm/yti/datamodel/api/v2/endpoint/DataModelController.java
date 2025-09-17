@@ -221,4 +221,14 @@ public class DataModelController {
                         .createModelURI(prefix, version)
                         .getGraphURI()));
     }
+
+    @Operation(summary = "Change reference model's version")
+    @PutMapping("/{prefix}/change-reference-version")
+    public ResponseEntity<Void> changeReferenceVersion(
+            @PathVariable @Parameter(description = "Data model prefix") String prefix,
+            @RequestParam @Parameter(description = "Reference model's prefix") String referenceURI,
+            @RequestParam(required = false) @Parameter(description = "New version number. Use draft if not specified") @ValidSemanticVersion String newVersion) {
+        dataModelService.changeReferenceVersion(prefix, referenceURI, newVersion);
+        return ResponseEntity.ok().build();
+    }
 }
