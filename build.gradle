@@ -36,9 +36,6 @@ repositories {
     google {
         content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
     }
-    jcenter {
-        content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
-    }
 
     // put your artifactory parameters to $HOME/.gradle/gradle.properties
     if (project.hasProperty('artifactoryUrl')) {
