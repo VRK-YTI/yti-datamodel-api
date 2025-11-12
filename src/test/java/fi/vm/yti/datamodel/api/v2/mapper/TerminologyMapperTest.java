@@ -33,7 +33,9 @@ class TerminologyMapperTest {
         var resource = model.getResource(graph);
 
         assertEquals(graph, resource.getURI());
-        assertEquals("Test@en", resource.getProperty(RDFS.label).getObject().toString());
+        var literal = resource.getProperty(RDFS.label).getLiteral();
+        assertEquals("Test", literal.getLexicalForm());
+        assertEquals("en", literal.getLanguage());
     }
 
     @Test
