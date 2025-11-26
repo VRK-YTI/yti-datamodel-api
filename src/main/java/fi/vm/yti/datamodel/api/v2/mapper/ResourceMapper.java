@@ -163,7 +163,7 @@ public class ResourceMapper {
 
         // update range to attribute restrictions (owl:someValuesFrom)
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
-            model.listStatements(new SimpleSelector(null, OWL.equivalentClass, (RDFNode) null))
+            model.listStatements(null, OWL.equivalentClass, (RDFNode) null)
                     .filterKeep(p -> p.getObject().isAnon()).toList()
                     .forEach(r -> r.getProperty(OWL.intersectionOf).getObject().as(RDFList.class)
                             .asJavaList().stream()
