@@ -53,7 +53,7 @@ targetCompatibility = 17
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2022.0.0'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2023.0.2'
     }
 }
 
@@ -85,6 +85,7 @@ dependencies {
     implementation "org.apache.jena:jena-arq:5.6.0"
     implementation "org.apache.jena:jena-rdfconnection:5.6.0"
     implementation "org.apache.jena:jena-querybuilder:5.6.0"
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
     implementation "com.google.guava:guava:31.1-jre"
 
     // library for programmatically generating json schema
