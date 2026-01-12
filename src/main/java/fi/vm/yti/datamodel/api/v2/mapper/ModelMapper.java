@@ -115,23 +115,23 @@ public class ModelMapper {
         modelResource.removeAll(DCTerms.language);
         dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
-        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
-        removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
+        removePropertiesWhere(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
+        removePropertiesWhere(modelResource.listProperties(OWL.imports), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
         addInternalNamespaceToDatamodel(dataModelDTO, modelResource);
 
-        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
+        removePropertiesWhere(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
                 && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
-        removeFromIterator(modelResource.listProperties(OWL.imports), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
+        removePropertiesWhere(modelResource.listProperties(OWL.imports), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
                 && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
         addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
 
 
-        removeFromIterator(modelResource.listProperties(DCTerms.requires), val ->
+        removePropertiesWhere(modelResource.listProperties(DCTerms.requires), val ->
                 val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
         dataModelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
         if(MapperUtils.isApplicationProfile(modelResource)){
-            removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE));
+            removePropertiesWhere(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE));
             dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
@@ -139,15 +139,26 @@ public class ModelMapper {
     }
 
 
-    private void removeFromIterator(StmtIterator statements, Predicate<String> predicate){
-        while(statements.hasNext()){
-            var next = statements.next();
-            var value = next.getObject().toString();
-            if(predicate.test(value)){
-                statements.remove();
+    private void removePropertiesWhere(StmtIterator statements, Predicate<String> predicate) {
+        var toRemove = new ArrayList<Statement>();
+        try {
+            while (statements.hasNext()) {
+                var next = statements.next();
+                var value = next.getObject().toString();
+                if (predicate.test(value)) {
+                    toRemove.add(next);
+                }
             }
+        } finally {
+            statements.close();
+        }
+
+        var model = toRemove.isEmpty() ? null : toRemove.get(0).getModel();
+        if (model != null) {
+            model.remove(toRemove);
         }
     }
+
 
     private void addLinkToModel(Model model, Resource modelResource, LinkDTO linkDTO) {
         var blankNode = model.createResource();
