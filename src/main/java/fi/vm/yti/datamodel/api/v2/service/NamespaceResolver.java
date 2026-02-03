@@ -66,7 +66,7 @@ public class NamespaceResolver {
             var accept = String.join(", ", ACCEPT_TYPES);
 
             // Uncefact works only with one accept header
-            if (namespace.equals("https://vocabulary.uncefact.org/")) {
+            if (namespace.equals("https://vocabulary.uncefact.org/") || namespace.startsWith("https://test.uncefact.org/vocabulary/untp/core/0/")) {
                 accept = "application/ld+json";
             }
             RDFParser.create()
