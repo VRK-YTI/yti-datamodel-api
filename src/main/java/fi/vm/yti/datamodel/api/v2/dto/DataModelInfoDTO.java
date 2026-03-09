@@ -16,6 +16,7 @@ public class DataModelInfoDTO extends MetaDataInfoDTO {
     private Set<LinkDTO> links = Set.of();
     private String version;
     private String versionIri;
+    private Boolean hasAssociationsWithDomainOrRange;
 
     public Set<InternalNamespaceDTO> getInternalNamespaces() {
         return internalNamespaces;
@@ -79,5 +80,13 @@ public class DataModelInfoDTO extends MetaDataInfoDTO {
 
     public void setVersionIri(String versionIri) {
         this.versionIri = versionIri;
+    }
+
+    public Boolean getHasAssociationsWithDomainOrRange() {
+        return hasAssociationsWithDomainOrRange;
+    }
+
+    public void setHasAssociationsWithDomainOrRange(Boolean hasAssociationsWithDomainOrRange) {
+        this.hasAssociationsWithDomainOrRange = hasAssociationsWithDomainOrRange;
     }
 }

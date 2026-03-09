@@ -256,6 +256,14 @@ public class ModelMapper {
         }).collect(Collectors.toSet());
         datamodelDTO.setLinks(links);
 
+        var hasAssociationsWithDomainOrRange = modelResource.listProperties(DCTerms.hasPart)
+                .toList()
+                .stream()
+                .map(stmt -> stmt.getObject().asResource())
+                .filter(res -> MapperUtils.hasType(res, OWL.ObjectProperty))
+                .anyMatch(res -> res.hasProperty(RDFS.domain) || res.hasProperty(RDFS.range));
+        datamodelDTO.setHasAssociationsWithDomainOrRange(hasAssociationsWithDomainOrRange);
+
         return datamodelDTO;
     }
 
