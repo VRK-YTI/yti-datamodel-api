@@ -250,8 +250,7 @@ public class DataModelService {
 
         // remove editorial notes from resources
         if (!hasRights) {
-            var hiddenValues = exportedModel.listStatements(
-                    new SimpleSelector(null, SKOS.editorialNote, (String) null)).toList();
+            var hiddenValues = exportedModel.listStatements(null, SKOS.editorialNote, (String) null).toList();
             exportedModel.remove(hiddenValues);
         }
 

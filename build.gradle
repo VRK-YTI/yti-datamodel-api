@@ -2,7 +2,6 @@ buildscript {
     repositories {
         mavenCentral()
         google()
-        jcenter()
     }
     dependencies {
         classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '4.24.16')
@@ -11,8 +10,8 @@ buildscript {
 
 plugins {
     id "io.spring.dependency-management" version "1.1.0"
-    id "org.springframework.boot" version "3.0.2"
-    id "org.sonarqube" version "3.3"
+    id "org.springframework.boot" version "3.3.13"
+    id "org.sonarqube" version "7.2.2.6593"
     id "jacoco"
     id "org.owasp.dependencycheck" version "7.4.4"
     id "com.gorylenko.gradle-git-properties" version "2.4.1"
@@ -36,9 +35,6 @@ repositories {
     google {
         content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
     }
-    jcenter {
-        content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
-    }
 
     // put your artifactory parameters to $HOME/.gradle/gradle.properties
     if (project.hasProperty('artifactoryUrl')) {
@@ -57,7 +53,7 @@ targetCompatibility = 17
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2022.0.0'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2023.0.2'
     }
 }
 
@@ -71,7 +67,7 @@ dependencies {
     implementation "org.springframework.security:spring-security-web"
     implementation "org.springframework.boot:spring-boot-starter-webflux"
 
-    implementation "fi.vm.yti:yti-spring-security:0.4.0"
+    implementation "fi.vm.yti:yti-spring-security:0.5.0"
     implementation "fi.vm.yti:yti-spring-migration:0.3.0"
 
     implementation "org.springframework.cloud:spring-cloud-starter-config"
@@ -85,17 +81,18 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2"
 
     implementation "org.topbraid:shacl:1.4.2"
-    implementation "org.apache.jena:jena-core:4.10.0"
-    implementation "org.apache.jena:jena-arq:4.10.0"
-    implementation "org.apache.jena:jena-rdfconnection:4.10.0"
-    implementation "org.apache.jena:jena-querybuilder:4.10.0"
+    implementation "org.apache.jena:jena-core:5.6.0"
+    implementation "org.apache.jena:jena-arq:5.6.0"
+    implementation "org.apache.jena:jena-rdfconnection:5.6.0"
+    implementation "org.apache.jena:jena-querybuilder:5.6.0"
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
     implementation "com.google.guava:guava:31.1-jre"
 
     // library for programmatically generating json schema
     // NOTE: the project is in maintenance mode
     implementation "com.github.erosb:everit-json-schema:1.14.4"
 
-    implementation "fi.vm.yti:yti-common-backend:0.5.0"
+    implementation "fi.vm.yti:yti-common-backend:0.7.0"
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.jetbrains:annotations:23.0.0"
@@ -122,7 +119,7 @@ sonarqube {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 test {

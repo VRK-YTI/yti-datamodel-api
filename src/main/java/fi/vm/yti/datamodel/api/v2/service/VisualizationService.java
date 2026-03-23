@@ -235,8 +235,7 @@ public class VisualizationService {
         var classType = MapperUtils.isLibrary(model.getResource(graph))
                 ? OWL.Class
                 : SH.NodeShape;
-        return model.listStatements(
-                new SimpleSelector(null, RDF.type, classType));
+        return model.listStatements(null, RDF.type, classType);
     }
 
     /**
