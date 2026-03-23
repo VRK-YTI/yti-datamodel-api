@@ -359,6 +359,39 @@ class ModelMapperTest {
         assertEquals("link title", linkDTO.getName().get("fi"));
         assertEquals("link description", linkDTO.getDescription().get("fi"));
         assertEquals("https://example.com", linkDTO.getUri());
+
+        assertFalse(result.getHasAssociationsWithDomainOrRange());
+    }
+
+    @Test
+    void testMapToDatamodelDTOHasAssociationsWithDomainOrRange() {
+        var modelUri = Constants.DATA_MODEL_NAMESPACE + "test/";
+        when(coreRepository.fetch(Constants.DATA_MODEL_NAMESPACE + "int/")).thenReturn(ModelFactory.createDefaultModel());
+
+        // domain only — flag should be true
+        var mDomainOnly = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        var associationDomainOnly = mDomainOnly.createResource(modelUri + "TestAssociation")
+                .addProperty(RDF.type, OWL.ObjectProperty)
+                .addProperty(RDFS.domain, mDomainOnly.createResource(modelUri + "SomeClass"));
+        mDomainOnly.getResource(modelUri).addProperty(DCTerms.hasPart, associationDomainOnly);
+        assertTrue(mapper.mapToDataModelDTO("test", mDomainOnly, null).getHasAssociationsWithDomainOrRange());
+
+        // range only — flag should be true
+        var mRangeOnly = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        var associationRangeOnly = mRangeOnly.createResource(modelUri + "TestAssociation")
+                .addProperty(RDF.type, OWL.ObjectProperty)
+                .addProperty(RDFS.range, mRangeOnly.createResource(modelUri + "OtherClass"));
+        mRangeOnly.getResource(modelUri).addProperty(DCTerms.hasPart, associationRangeOnly);
+        assertTrue(mapper.mapToDataModelDTO("test", mRangeOnly, null).getHasAssociationsWithDomainOrRange());
+
+        // both domain and range — flag should be true
+        var mBoth = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        var associationBoth = mBoth.createResource(modelUri + "TestAssociation")
+                .addProperty(RDF.type, OWL.ObjectProperty)
+                .addProperty(RDFS.domain, mBoth.createResource(modelUri + "SomeClass"))
+                .addProperty(RDFS.range, mBoth.createResource(modelUri + "OtherClass"));
+        mBoth.getResource(modelUri).addProperty(DCTerms.hasPart, associationBoth);
+        assertTrue(mapper.mapToDataModelDTO("test", mBoth, null).getHasAssociationsWithDomainOrRange());
     }
 
     @Test
