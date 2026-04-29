@@ -26,7 +26,7 @@
               {
                 "multi_match": {
                   "fields": ["label.*.ngram"],
-                  "operator": "or",
+                  "operator": "and",
                   "query": "test"
                 }
               }
@@ -47,7 +47,7 @@
             ]
           }
         },
-        { "terms": { "resourceType": ["ASSOCIATION", "ATTRIBUTE"] } },
+        { "terms": { "resourceType": ["ATTRIBUTE", "ASSOCIATION"] } },
         {
           "term": {
             "targetClass": {
@@ -60,8 +60,8 @@
         {
           "terms": {
             "isDefinedBy": [
-              "https://iri.suomi.fi/model/draft_model/",
-              "https://iri.suomi.fi/model/test/"
+              "https://iri.suomi.fi/model/test/",
+              "https://iri.suomi.fi/model/draft_model/"
             ]
           }
         },

@@ -5,12 +5,12 @@
     "bool": {
       "must": [
         { "terms": { "type": ["PROFILE"] } },
-        { "terms": { "isPartOf": ["P1", "P11"] } },
+        { "terms": { "isPartOf": ["P11", "P1"] } },
         {
           "terms": { "contributor": ["7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"] }
         },
         { "term": { "language": { "value": "en" } } },
-        { "terms": { "status": ["VALID", "SUGGESTED"] } },
+        { "terms": { "status": ["SUGGESTED", "VALID"] } },
         {
           "bool": {
             "minimum_should_match": "1",
@@ -51,7 +51,7 @@
               {
                 "multi_match": {
                   "fields": ["label.*.ngram"],
-                  "operator": "or",
+                  "operator": "and",
                   "query": "test query"
                 }
               },
