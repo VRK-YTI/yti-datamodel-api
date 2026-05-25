@@ -4,47 +4,50 @@
     "bool": {
       "must": [
         {
-          "query_string": {
-            "fields": [
-              "label.*"
-            ],
-            "query": "test~1 *test*"
-          }
-        },
-        {
           "bool": {
             "minimum_should_match": "1",
             "should": [
               {
-                "terms": {
-                  "namespace": [
-                    "http://external-data.com/test"
-                  ]
+                "multi_match": {
+                  "boost": 3.0,
+                  "fields": ["label.*"],
+                  "operator": "and",
+                  "query": "test"
                 }
               },
               {
-                "terms": {
-                  "versionIri": [
-                    "https://iri.suomi.fi/model/addedNs/1.0.0/"
-                  ]
+                "multi_match": {
+                  "boost": 2.0,
+                  "fields": ["label.*.edge"],
+                  "operator": "and",
+                  "query": "test"
                 }
               },
               {
-                "terms": {
-                  "id": []
+                "multi_match": {
+                  "fields": ["label.*.ngram"],
+                  "operator": "and",
+                  "query": "test"
                 }
               }
             ]
           }
         },
         {
-          "terms": {
-            "resourceType": [
-              "ATTRIBUTE",
-              "ASSOCIATION"
+          "bool": {
+            "minimum_should_match": "1",
+            "should": [
+              { "terms": { "namespace": ["http://external-data.com/test"] } },
+              {
+                "terms": {
+                  "versionIri": ["https://iri.suomi.fi/model/addedNs/1.0.0/"]
+                }
+              },
+              { "terms": { "id": [] } }
             ]
           }
         },
+        { "terms": { "resourceType": ["ATTRIBUTE", "ASSOCIATION"] } },
         {
           "term": {
             "targetClass": {
@@ -64,15 +67,7 @@
         },
         {
           "bool": {
-            "must_not": [
-              {
-                "term": {
-                  "status": {
-                    "value": "DRAFT"
-                  }
-                }
-              }
-            ]
+            "must_not": [{ "term": { "status": { "value": "DRAFT" } } }]
           }
         }
       ]
