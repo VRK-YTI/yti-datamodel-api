@@ -228,6 +228,9 @@ public class DataModelService {
 
         try {
             model = coreRepository.fetch(uri.getGraphURI());
+            if (version == null && !authorizationManager.hasRightToModel(prefix, model, true)) {
+                return ResponseEntity.notFound().build();
+            }
         } catch (ResourceNotFoundException e) {
             // cannot throw ResourceNotFoundException because accept header is not application/json
             return ResponseEntity.notFound().build();
