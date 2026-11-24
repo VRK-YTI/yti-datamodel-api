@@ -1,4 +1,4 @@
-FROM yti-docker-java-base:corretto-17.0.10
+FROM yti-docker-java-base:corretto-17.0.21
 
 ADD build/libs/yti-datamodel-api.jar yti-datamodel-api.jar
 
